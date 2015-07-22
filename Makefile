@@ -1,5 +1,5 @@
 CC=g++
-LDFLAGS=-lboost_regex -lboost_system -lyaml-cpp -lglog
+LDFLAGS=-lboost_regex -lboost_system -lyaml-cpp -lglog -fPIC
 CFLAGS=-std=c++0x -Wall -Werror -g -O3
 
 # wildcard object build target
@@ -12,6 +12,9 @@ uaparser_cpp: libuaparser_cpp.a
 libuaparser_cpp.a: UaParser.o
 	ar rcs $@ $^
 
+libuaparser_cpp.so: UaParser.o
+	$(CC) $< -shared $(LDFLAGS) -o $@
+
 UaParserTest: libuaparser_cpp.a UaParserTest.o
 	$(CC) $(CFLAGS) $^ -o $@ libuaparser_cpp.a $(LDFLAGS) -lgtest -lpthread
 
@@ -22,7 +25,7 @@ test: UaParserTest
 clean:
 	find . -name "*.o" -exec rm -rf {} \; # clean up object files
 	find . -name "*.d" -exec rm -rf {} \; # clean up dependencies
-	rm -f UaParserTest *.a
+	rm -f UaParserTest *.a *.so
 
 # automatically include the generated *.d dependency make targets
 # that are created from the wildcard %.o build target above

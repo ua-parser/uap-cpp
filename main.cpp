@@ -11,14 +11,14 @@
 # distributed under the License is distributed on an 'AS IS' BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-# limitations under the License.
+# limitations under the License.#include "ua_parser.h"
 */
 
 #include "ua_parser.h"
 
 int main(int argc, char *argv[]) {
   std::string user_agent_string("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/30.0.1599.114 Chrome/30.0.1599.114 Safari/537.36");
-  std::string yaml_file("../regexes.yaml");
+  std::string yaml_file("../uap-core/gexes.yaml");
 
   if (argc>1 && std::string(argv[1])=="--help") {
     std::cout << "Usage: ua_parser_cli [user agent string] [regexes.yaml]" << std::endl;

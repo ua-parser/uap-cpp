@@ -18,7 +18,7 @@ TEST(UserAgentParser, basic) {
   ASSERT_EQ("Mobile Safari", uagent.browser.family);
   ASSERT_EQ("5", uagent.browser.major);
   ASSERT_EQ("1", uagent.browser.minor);
-  ASSERT_EQ("0", uagent.browser.patch);
+  ASSERT_EQ("", uagent.browser.patch);
   ASSERT_EQ("Mobile Safari 5.1.0", uagent.browser.toString());
   ASSERT_EQ("5.1.0", uagent.browser.toVersionString());
 
@@ -68,19 +68,40 @@ void test_browser_or_os(const std::string file_path, const bool browser) {
 void test_device(const std::string file_path) {
   auto root = YAML::LoadFile(file_path);
   const auto& test_cases = root["test_cases"];
+  unsigned int passed_counter = 0, test_counter = 0;
   for (const auto& test : test_cases) {
     const auto unparsed = string_field(test, "user_agent_string");
     const auto uagent = g_ua_parser.parse(unparsed);
     const auto family = string_field(test, "family");
-    ASSERT_EQ(family, uagent.device.family);
+    const auto brand = string_field(test, "brand");
+    const auto model = string_field(test, "model");
+
+    EXPECT_EQ(family, uagent.device.family);
+    EXPECT_EQ(brand, uagent.device.brand);
+    EXPECT_EQ(model, uagent.device.model);
+
+    test_counter++;
+    if ( uagent.device.family == family && uagent.device.brand == brand && uagent.device.model == model )
+        passed_counter++;
+    else
+      std::cout << unparsed << std::endl;
   }
+
+  std::cout << "Device tests passed: " <<  passed_counter << "/" << test_counter << std::endl;
 }
 
 }  // namespace
 
-TEST(BrowserVersion, test_user_agent_parser) {
-  test_browser_or_os(UA_CORE_DIR+"/test_resources/test_user_agent_parser.yaml", true);
+
+
+TEST(OsVersion, test_os) {
+  test_browser_or_os(UA_CORE_DIR+"/tests/test_os.yaml", false);
 }
+
+TEST(OsVersion, test_ua) {
+  test_browser_or_os(UA_CORE_DIR+"/tests/test_ua.yaml", true);
+}
+
 
 TEST(BrowserVersion, firefox_user_agent_strings) {
   test_browser_or_os(UA_CORE_DIR+"/test_resources/firefox_user_agent_strings.yaml", true);
@@ -90,17 +111,15 @@ TEST(BrowserVersion, pgts_browser_list) {
   test_browser_or_os(UA_CORE_DIR+"/test_resources/pgts_browser_list.yaml", true);
 }
 
-TEST(OsVersion, test_user_agent_parser_os) {
-  test_browser_or_os(UA_CORE_DIR+"/test_resources/test_user_agent_parser_os.yaml", false);
-}
-
 TEST(OsVersion, additional_os_tests) {
   test_browser_or_os(UA_CORE_DIR+"/test_resources/additional_os_tests.yaml", false);
 }
 
 TEST(DeviceFamily, test_device) {
-  test_device(UA_CORE_DIR+"/test_resources/test_device.yaml");
+  test_device(UA_CORE_DIR+"/tests/test_device.yaml");
 }
+
+
 
 }  // namespace
 

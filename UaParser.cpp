@@ -6,6 +6,7 @@
 #include <unordered_set>
 
 #include <boost/regex.hpp>
+#include <boost/algorithm/string.hpp>
 #include <glog/logging.h>
 #include <yaml-cpp/yaml.h>
 
@@ -36,7 +37,8 @@ typedef AgentStore BrowserStore;
       const auto key = it->first.as<std::string>();                      \
       const auto value = it->second.as<std::string>();                   \
       if (key == "regex") {                                              \
-        agent_store.regExpr = value;                                     \
+        agent_store.regExpr.assign(value,                                \
+          boost::regex::optimize);                                       \
       } else if (key == repl) {                                          \
         agent_store.replacement = value;                                 \
       } else if (key == maj_repl && !value.empty()) {                    \
@@ -77,10 +79,10 @@ struct UAStore {
         const auto key = it->first.as<std::string>();
         const auto value = it->second.as<std::string>();
         if (key == "regex") {
-          device.regExpr.assign(value);
-        } else if ( key == "regex_flag") {
-            if ( value == "i")
-              device.regExpr.assign(device.regExpr.str(), boost::regex::icase);
+          device.regExpr.assign(value, boost::regex::optimize);
+        }
+        else if ( key == "regex_flag" && value == "i" ) {
+          device.regExpr.assign(device.regExpr.str(), boost::regex::optimize|boost::regex::icase);
         } else if (key == "device_replacement") {
           device.replacement = value;
         } else if (key == "model_replacement") {
@@ -105,60 +107,30 @@ struct UAStore {
 // HELPERS //
 /////////////
 
-void find_and_replace(std::string &original, const std::string &tofind, const std::string &toreplace) {
-    std::string::size_type loc = original.find(tofind);
-    if (loc == std::string::npos) {
-        return;
-    }
-
-    //Because there can be spaces leading the replacement symbol " $1" and when toreplace is empty
-    // This can lead to multiple spaces e.g.: "HTC Desire   " or "HTC   Desire"
-    //   But you want to avoid the case of "HTC $1$2" where $2 is not empty but $2 , you don't wan't "HTCxyz"
-    // If you're replacing empty:
-    //   If you have a leading whitespace
-    //     If the next character after the placeholder (loc+2) is also a white space OR it's the end of the string
-    //       Then get rid of the leading whitespace
-    if (toreplace.size()==0) {
-        if (loc != 0 && original[loc-1] == ' ') {
-            if( (loc+2 < original.size() && original[loc+2]==' ') || (loc+2 >= original.size()) ) {
-                original.replace(loc-1, tofind.size()+1, toreplace);
-                return;
-            }
-        }
-    }
-    //Otherwise just do a normal replace
-    original.replace(loc, tofind.size(), toreplace);
-}
-
-
 //Device parsing is different than the other parsing in that a field can have many placeholders
 const char* placeholders[]= {"$1", "$2", "$3", "$4","$5", "$6", "$7", "$8", "$9"};
 void replace_all_placeholders(std::string& device_property, const boost::smatch &result) {
+    std::string::size_type loc;
     for (unsigned int idx = 1; idx < result.size(); ++idx) {
-        std::string replacement;
-        try {
-            replacement = result[idx].str();
+        loc = device_property.find(placeholders[idx-1]);
+        if ( loc != std::string::npos ) {
+            if ( result[idx].matched ) {
+              device_property.replace(loc,2,result[idx].str());
+            }
+            else
+              device_property.erase(loc,2);
         }
-        catch (std::length_error &e) {
-            replacement = std::string("");
-        }
-        find_and_replace(device_property, placeholders[idx-1], replacement);
     }
+
+    // There should not be placehoders leftover. This is a Workaround ...
+    loc = device_property.find_first_of('$');
+    if ( loc != std::string::npos )
+      device_property.erase(loc,device_property.size());
     return;
 }
 
 
-void remove_trailing_whitespaces(std::string &original) {
-    //Sometimes te regexes don't actually parse correctly leaving trailing whitespaces
-    //The if statment is so that we don't always do a find.
-    if (original.back()== ' ') {
-        size_t pos = original.find_last_not_of(' ');
-        if (pos != std::string::npos) {
-            original.resize(pos+1);
-        }
-    }
-    return;
-}
+
 
 template<class AGENT, class AGENT_STORE>
 void fillAgent(AGENT& agent, const AGENT_STORE& store, const boost::smatch& m) {
@@ -225,40 +197,34 @@ UserAgent parseImpl(const std::string& ua, const UAStore* ua_store) {
   for (const auto& d : ua_store->deviceStore) {
     auto& device = uagent.device;
     boost::smatch m;
+
     if (boost::regex_search(ua, m, d.regExpr)) {
-
-      if ( d.replacement.empty() && m.size() == 1 ){
-        device.family = m[0].str();
-      }
-      else if (d.replacement.empty() && m.size() > 1) {
-        device.family = m[1].str();
-      }
-      else{
-        device.family = d.replacement;
-        replace_all_placeholders(device.family, m);
-        device.family = boost::regex_replace(device.family, boost::regex("\\$[0-9]"),"");
-        remove_trailing_whitespaces(device.family);
-      }
-
-     if (d.brand_replacement.empty() && m.size() > 2) {
-        device.brand = m[2].str();
+      if ( d.replacement.empty() && m.size() > 1 ) {
+          device.family = m[1].str();
       }
       else {
-        device.brand = d.brand_replacement;
-        replace_all_placeholders(device.brand, m);
-        remove_trailing_whitespaces(device.brand);
+        device.family = d.replacement;
+        replace_all_placeholders(device.family, m);
+        boost::algorithm::trim(device.family);
       }
 
-      if (d.model_replacement.empty() && m.size() > 3) {
-         device.model = m[3].str();
-       }
-       else {
-         device.model = d.model_replacement;
-         replace_all_placeholders(device.model, m);
-         remove_trailing_whitespaces(device.model);
-       }
+      if ( ! d.brand_replacement.empty() )
+      {
+        device.brand = d.brand_replacement;
+        replace_all_placeholders(device.brand, m);
+        boost::algorithm::trim(device.brand);
+      }
 
-       break;
+      if (d.model_replacement.empty() && m.size() > 1) {
+           device.model = m[1].str();
+      }
+      else {
+           device.model = d.model_replacement;
+           replace_all_placeholders(device.model, m);
+           boost::algorithm::trim(device.model);
+      }
+
+      break;
     } else {
       device.family = "Other";
     }

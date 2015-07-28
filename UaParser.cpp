@@ -20,7 +20,6 @@ struct GenericStore {
 struct DeviceStore : GenericStore {
   std::string brandReplacement;
   std::string modelReplacement;
-  boost::regex regExpr;
 };
 
 struct AgentStore : GenericStore {

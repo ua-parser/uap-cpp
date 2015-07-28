@@ -81,8 +81,10 @@ void test_device(const std::string file_path) {
     EXPECT_EQ(model, uagent.device.model);
 
     test_counter++;
-    if ( uagent.device.family == family && uagent.device.brand == brand && uagent.device.model == model )
-        passed_counter++;
+    if (uagent.device.family == family &&
+        uagent.device.brand == brand &&
+        uagent.device.model == model)
+      passed_counter++;
     else
       std::cout << unparsed << std::endl;
   }
@@ -102,7 +104,6 @@ TEST(OsVersion, test_ua) {
   test_browser_or_os(UA_CORE_DIR+"/tests/test_ua.yaml", true);
 }
 
-
 TEST(BrowserVersion, firefox_user_agent_strings) {
   test_browser_or_os(UA_CORE_DIR+"/test_resources/firefox_user_agent_strings.yaml", true);
 }
@@ -118,8 +119,6 @@ TEST(OsVersion, additional_os_tests) {
 TEST(DeviceFamily, test_device) {
   test_device(UA_CORE_DIR+"/tests/test_device.yaml");
 }
-
-
 
 }  // namespace
 

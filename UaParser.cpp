@@ -12,21 +12,21 @@
 
 namespace {
 
-  struct GenericStore {
-      std::string replacement;
-      boost::regex regExpr;
-  };
+struct GenericStore {
+  std::string replacement;
+  boost::regex regExpr;
+};
 
-  struct DeviceStore : GenericStore {
-    std::string brand_replacement;
-    std::string model_replacement;
-    boost::regex regExpr;
-  };
+struct DeviceStore : GenericStore {
+  std::string brandReplacement;
+  std::string modelReplacement;
+  boost::regex regExpr;
+};
 
-  struct AgentStore : GenericStore {
-    std::string majorVersionReplacement;
-    std::string minorVersionReplacement;
-  };
+struct AgentStore : GenericStore {
+  std::string majorVersionReplacement;
+  std::string minorVersionReplacement;
+};
 
 typedef AgentStore OsStore;
 typedef AgentStore BrowserStore;
@@ -86,9 +86,9 @@ struct UAStore {
         } else if (key == "device_replacement") {
           device.replacement = value;
         } else if (key == "model_replacement") {
-          device.model_replacement = value;
+          device.modelReplacement = value;
         } else if (key == "brand_replacement") {
-          device.brand_replacement = value;
+          device.brandReplacement = value;
         } else {
           CHECK(false);
         }
@@ -108,25 +108,24 @@ struct UAStore {
 /////////////
 
 //Device parsing is different than the other parsing in that a field can have many placeholders
-const char* placeholders[]= {"$1", "$2", "$3", "$4","$5", "$6", "$7", "$8", "$9"};
+const char* placeholders[] = {"$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9"};
 void replace_all_placeholders(std::string& device_property, const boost::smatch &result) {
-    std::string::size_type loc;
-    for (unsigned int idx = 1; idx < result.size(); ++idx) {
-        loc = device_property.find(placeholders[idx-1]);
-        if ( loc != std::string::npos ) {
-            if ( result[idx].matched ) {
-              device_property.replace(loc,2,result[idx].str());
-            }
-            else
-              device_property.erase(loc,2);
-        }
+  std::string::size_type loc;
+  for (size_t idx = 1; idx < result.size(); ++idx) {
+    loc = device_property.find(placeholders[idx-1]);
+    if (loc != std::string::npos) {
+      if (result[idx].matched) {
+        device_property.replace(loc,2,result[idx].str());
+      }
+      else
+        device_property.erase(loc,2);
     }
-
-    // There should not be placehoders leftover. This is a Workaround ...
-    loc = device_property.find_first_of('$');
-    if ( loc != std::string::npos )
-      device_property.erase(loc,device_property.size());
-    return;
+  }
+  // There should not be placehoders leftover. This is a Workaround ...
+  loc = device_property.find_first_of('$');
+  if ( loc != std::string::npos )
+    device_property.erase(loc,device_property.size());
+  return;
 }
 
 
@@ -199,37 +198,32 @@ UserAgent parseImpl(const std::string& ua, const UAStore* ua_store) {
     boost::smatch m;
 
     if (boost::regex_search(ua, m, d.regExpr)) {
-      if ( d.replacement.empty() && m.size() > 1 ) {
-          device.family = m[1].str();
-      }
-      else {
+      if ( d.replacement.empty() && m.size() > 1) {
+        device.family = m[1].str();
+      } else {
         device.family = d.replacement;
         replace_all_placeholders(device.family, m);
         boost::algorithm::trim(device.family);
       }
 
-      if ( ! d.brand_replacement.empty() )
-      {
-        device.brand = d.brand_replacement;
+      if ( ! d.brandReplacement.empty() ) {
+        device.brand = d.brandReplacement;
         replace_all_placeholders(device.brand, m);
         boost::algorithm::trim(device.brand);
       }
 
-      if (d.model_replacement.empty() && m.size() > 1) {
-           device.model = m[1].str();
+      if (d.modelReplacement.empty() && m.size() > 1) {
+        device.model = m[1].str();
+      } else {
+          device.model = d.modelReplacement;
+          replace_all_placeholders(device.model, m);
+          boost::algorithm::trim(device.model);
       }
-      else {
-           device.model = d.model_replacement;
-           replace_all_placeholders(device.model, m);
-           boost::algorithm::trim(device.model);
-      }
-
       break;
     } else {
       device.family = "Other";
     }
   }
-
   return uagent;
 }
 

@@ -37,7 +37,7 @@ typedef AgentStore BrowserStore;
       const auto value = it->second.as<std::string>();                   \
       if (key == "regex") {                                              \
         agent_store.regExpr.assign(value,                                \
-          boost::regex::optimize);                                       \
+          boost::regex::optimize|boost::regex::normal);                  \
       } else if (key == repl) {                                          \
         agent_store.replacement = value;                                 \
       } else if (key == maj_repl && !value.empty()) {                    \
@@ -74,14 +74,16 @@ struct UAStore {
     const auto& device_parsers = regexes["device_parsers"];
     for (const auto& d : device_parsers) {
       DeviceStore device;
+      bool regex_flag = false;
       for (auto it = d.begin(); it != d.end(); ++it) {
         const auto key = it->first.as<std::string>();
         const auto value = it->second.as<std::string>();
         if (key == "regex") {
-          device.regExpr.assign(value, boost::regex::optimize);
+          device.regExpr.assign(value,
+            boost::regex::optimize|boost::regex::normal);
         }
         else if ( key == "regex_flag" && value == "i" ) {
-          device.regExpr.assign(device.regExpr.str(), boost::regex::optimize|boost::regex::icase);
+          regex_flag = true;
         } else if (key == "device_replacement") {
           device.replacement = value;
         } else if (key == "model_replacement") {
@@ -91,6 +93,10 @@ struct UAStore {
         } else {
           CHECK(false);
         }
+      }
+      if ( regex_flag == true ) {
+        device.regExpr.assign(device.regExpr.str(),
+          boost::regex::optimize|boost::regex::icase|boost::regex::normal);
       }
       deviceStore.push_back(device);
     }
@@ -122,7 +128,7 @@ void replace_all_placeholders(std::string& device_property, const boost::smatch 
   }
   // There should not be placehoders leftover. This is a Workaround ...
   loc = device_property.find_first_of('$');
-  if ( loc != std::string::npos )
+  if (loc != std::string::npos && loc + 1 < device_property.size())
     device_property.erase(loc,device_property.size());
   return;
 }
@@ -175,6 +181,7 @@ UserAgent parseImpl(const std::string& ua, const UAStore* ua_store) {
     boost::smatch m;
     if (boost::regex_search(ua, m, b.regExpr)) {
       fillAgent(browser, b, m);
+      boost::algorithm::trim(browser.family);
       break;
     } else {
       browser.family = "Other";

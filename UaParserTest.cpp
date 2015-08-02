@@ -68,7 +68,6 @@ void test_browser_or_os(const std::string file_path, const bool browser) {
 void test_device(const std::string file_path) {
   auto root = YAML::LoadFile(file_path);
   const auto& test_cases = root["test_cases"];
-  unsigned int passed_counter = 0, test_counter = 0;
   for (const auto& test : test_cases) {
     const auto unparsed = string_field(test, "user_agent_string");
     const auto uagent = g_ua_parser.parse(unparsed);
@@ -76,20 +75,10 @@ void test_device(const std::string file_path) {
     const auto brand = string_field(test, "brand");
     const auto model = string_field(test, "model");
 
-    EXPECT_EQ(family, uagent.device.family);
-    EXPECT_EQ(brand, uagent.device.brand);
-    EXPECT_EQ(model, uagent.device.model);
-
-    test_counter++;
-    if (uagent.device.family == family &&
-        uagent.device.brand == brand &&
-        uagent.device.model == model)
-      passed_counter++;
-    else
-      std::cout << unparsed << std::endl;
+    ASSERT_EQ(family, uagent.device.family);
+    ASSERT_EQ(brand, uagent.device.brand);
+    ASSERT_EQ(model, uagent.device.model);
   }
-
-  std::cout << "Device tests passed: " <<  passed_counter << "/" << test_counter << std::endl;
 }
 
 }  // namespace

@@ -7,7 +7,9 @@
 
 namespace {
 
-const UserAgentParser g_ua_parser("../regexes.yaml");
+static const std::string UA_CORE_DIR="../uap-core";
+
+const UserAgentParser g_ua_parser(UA_CORE_DIR + "/regexes.yaml");
 
 TEST(UserAgentParser, basic) {
   const auto uagent = g_ua_parser.parse(
@@ -41,7 +43,7 @@ std::string string_field(const YAML::Node& root, const std::string& fname) {
   return yaml_field.IsNull() ? "" : yaml_field.as<std::string>();
 }
 
-void test_browser_or_os(const char* file_path, const bool browser) {
+void test_browser_or_os(const std::string file_path, const bool browser) {
   auto root = YAML::LoadFile(file_path);
   const auto& test_cases = root["test_cases"];
   for (const auto& test : test_cases) {
@@ -63,41 +65,48 @@ void test_browser_or_os(const char* file_path, const bool browser) {
   }
 }
 
-void test_device(const char* file_path) {
+void test_device(const std::string file_path) {
   auto root = YAML::LoadFile(file_path);
   const auto& test_cases = root["test_cases"];
   for (const auto& test : test_cases) {
     const auto unparsed = string_field(test, "user_agent_string");
     const auto uagent = g_ua_parser.parse(unparsed);
     const auto family = string_field(test, "family");
+    const auto brand = string_field(test, "brand");
+    const auto model = string_field(test, "model");
+
     ASSERT_EQ(family, uagent.device.family);
+    ASSERT_EQ(brand, uagent.device.brand);
+    ASSERT_EQ(model, uagent.device.model);
   }
 }
 
 }  // namespace
 
-TEST(BrowserVersion, test_user_agent_parser) {
-  test_browser_or_os("../test_resources/test_user_agent_parser.yaml", true);
+
+
+TEST(OsVersion, test_os) {
+  test_browser_or_os(UA_CORE_DIR+"/tests/test_os.yaml", false);
+}
+
+TEST(OsVersion, test_ua) {
+  test_browser_or_os(UA_CORE_DIR+"/tests/test_ua.yaml", true);
 }
 
 TEST(BrowserVersion, firefox_user_agent_strings) {
-  test_browser_or_os("../test_resources/firefox_user_agent_strings.yaml", true);
+  test_browser_or_os(UA_CORE_DIR+"/test_resources/firefox_user_agent_strings.yaml", true);
 }
 
 TEST(BrowserVersion, pgts_browser_list) {
-  test_browser_or_os("../test_resources/pgts_browser_list.yaml", true);
-}
-
-TEST(OsVersion, test_user_agent_parser_os) {
-  test_browser_or_os("../test_resources/test_user_agent_parser_os.yaml", false);
+  test_browser_or_os(UA_CORE_DIR+"/test_resources/pgts_browser_list.yaml", true);
 }
 
 TEST(OsVersion, additional_os_tests) {
-  test_browser_or_os("../test_resources/additional_os_tests.yaml", false);
+  test_browser_or_os(UA_CORE_DIR+"/test_resources/additional_os_tests.yaml", false);
 }
 
 TEST(DeviceFamily, test_device) {
-  test_device("../test_resources/test_device.yaml");
+  test_device(UA_CORE_DIR+"/tests/test_device.yaml");
 }
 
 }  // namespace

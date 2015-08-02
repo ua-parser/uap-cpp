@@ -6,17 +6,23 @@
 #include <unordered_set>
 
 #include <boost/regex.hpp>
+#include <boost/algorithm/string.hpp>
 #include <glog/logging.h>
 #include <yaml-cpp/yaml.h>
 
 namespace {
 
-struct DeviceStore {
+struct GenericStore {
   std::string replacement;
   boost::regex regExpr;
 };
 
-struct AgentStore : DeviceStore {
+struct DeviceStore : GenericStore {
+  std::string brandReplacement;
+  std::string modelReplacement;
+};
+
+struct AgentStore : GenericStore {
   std::string majorVersionReplacement;
   std::string minorVersionReplacement;
 };
@@ -30,7 +36,8 @@ typedef AgentStore BrowserStore;
       const auto key = it->first.as<std::string>();                      \
       const auto value = it->second.as<std::string>();                   \
       if (key == "regex") {                                              \
-        agent_store.regExpr = value;                                     \
+        agent_store.regExpr.assign(value,                                \
+          boost::regex::optimize|boost::regex::normal);                  \
       } else if (key == repl) {                                          \
         agent_store.replacement = value;                                 \
       } else if (key == maj_repl && !value.empty()) {                    \
@@ -67,16 +74,29 @@ struct UAStore {
     const auto& device_parsers = regexes["device_parsers"];
     for (const auto& d : device_parsers) {
       DeviceStore device;
+      bool regex_flag = false;
       for (auto it = d.begin(); it != d.end(); ++it) {
         const auto key = it->first.as<std::string>();
         const auto value = it->second.as<std::string>();
         if (key == "regex") {
-          device.regExpr = value;
+          device.regExpr.assign(value,
+            boost::regex::optimize|boost::regex::normal);
+        }
+        else if ( key == "regex_flag" && value == "i" ) {
+          regex_flag = true;
         } else if (key == "device_replacement") {
           device.replacement = value;
+        } else if (key == "model_replacement") {
+          device.modelReplacement = value;
+        } else if (key == "brand_replacement") {
+          device.brandReplacement = value;
         } else {
           CHECK(false);
         }
+      }
+      if ( regex_flag == true ) {
+        device.regExpr.assign(device.regExpr.str(),
+          boost::regex::optimize|boost::regex::icase|boost::regex::normal);
       }
       deviceStore.push_back(device);
     }
@@ -86,6 +106,35 @@ struct UAStore {
   std::vector<OsStore> osStore;
   std::vector<BrowserStore> browserStore;
 };
+
+
+////////////
+// HELPERS //
+/////////////
+
+//Device parsing is different than the other parsing in that a field can have many placeholders
+const char* placeholders[] = {"$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9"};
+void replace_all_placeholders(std::string& device_property, const boost::smatch &result) {
+  std::string::size_type loc;
+  for (size_t idx = 1; idx < result.size(); ++idx) {
+    loc = device_property.find(placeholders[idx-1]);
+    if (loc != std::string::npos) {
+      if (result[idx].matched) {
+        device_property.replace(loc,2,result[idx].str());
+      }
+      else
+        device_property.erase(loc,2);
+    }
+  }
+  // There should not be placehoders leftover. This is a Workaround ...
+  loc = device_property.find_first_of('$');
+  if (loc != std::string::npos && loc + 1 < device_property.size())
+    device_property.erase(loc,device_property.size());
+  return;
+}
+
+
+
 
 template<class AGENT, class AGENT_STORE>
 void fillAgent(AGENT& agent, const AGENT_STORE& store, const boost::smatch& m) {
@@ -123,6 +172,7 @@ void fillAgent(AGENT& agent, const AGENT_STORE& store, const boost::smatch& m) {
   }
 }
 
+
 UserAgent parseImpl(const std::string& ua, const UAStore* ua_store) {
   UserAgent uagent;
 
@@ -131,6 +181,7 @@ UserAgent parseImpl(const std::string& ua, const UAStore* ua_store) {
     boost::smatch m;
     if (boost::regex_search(ua, m, b.regExpr)) {
       fillAgent(browser, b, m);
+      boost::algorithm::trim(browser.family);
       break;
     } else {
       browser.family = "Other";
@@ -151,22 +202,34 @@ UserAgent parseImpl(const std::string& ua, const UAStore* ua_store) {
   for (const auto& d : ua_store->deviceStore) {
     auto& device = uagent.device;
     boost::smatch m;
+
     if (boost::regex_search(ua, m, d.regExpr)) {
-      if (m.size() > 1) {
-        device.family = !d.replacement.empty()
-          ? boost::regex_replace(d.replacement, boost::regex("\\$1"), m[1].str())
-          : m[1].str();
-      } else if (m.size() == 1) {
-        device.family = !d.replacement.empty()
-          ? boost::regex_replace(d.replacement, boost::regex("\\$1"), m[0].str())
-          : m[0].str();
+      if ( d.replacement.empty() && m.size() > 1) {
+        device.family = m[1].str();
+      } else {
+        device.family = d.replacement;
+        replace_all_placeholders(device.family, m);
+        boost::algorithm::trim(device.family);
+      }
+
+      if ( ! d.brandReplacement.empty() ) {
+        device.brand = d.brandReplacement;
+        replace_all_placeholders(device.brand, m);
+        boost::algorithm::trim(device.brand);
+      }
+
+      if (d.modelReplacement.empty() && m.size() > 1) {
+        device.model = m[1].str();
+      } else {
+          device.model = d.modelReplacement;
+          replace_all_placeholders(device.model, m);
+          boost::algorithm::trim(device.model);
       }
       break;
     } else {
       device.family = "Other";
     }
   }
-
   return uagent;
 }
 

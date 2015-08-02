@@ -2,11 +2,16 @@
 
 #include <string>
 
-struct Device {
+struct Generic {
   std::string family;
 };
 
-struct Agent : Device {
+struct Device : Generic {
+  std::string model;
+  std::string brand;
+};
+
+struct Agent : Generic {
   std::string major;
   std::string minor;
   std::string patch;

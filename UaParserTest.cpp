@@ -7,7 +7,7 @@
 
 namespace {
 
-static const std::string UA_CORE_DIR="../uap-core";
+static const std::string UA_CORE_DIR = "../uap-core";
 
 const UserAgentParser g_ua_parser(UA_CORE_DIR + "/regexes.yaml");
 
@@ -86,27 +86,27 @@ void test_device(const std::string file_path) {
 
 
 TEST(OsVersion, test_os) {
-  test_browser_or_os(UA_CORE_DIR+"/tests/test_os.yaml", false);
+  test_browser_or_os(UA_CORE_DIR + "/tests/test_os.yaml", false);
 }
 
 TEST(OsVersion, test_ua) {
-  test_browser_or_os(UA_CORE_DIR+"/tests/test_ua.yaml", true);
+  test_browser_or_os(UA_CORE_DIR + "/tests/test_ua.yaml", true);
 }
 
 TEST(BrowserVersion, firefox_user_agent_strings) {
-  test_browser_or_os(UA_CORE_DIR+"/test_resources/firefox_user_agent_strings.yaml", true);
+  test_browser_or_os(UA_CORE_DIR + "/test_resources/firefox_user_agent_strings.yaml", true);
 }
 
 TEST(BrowserVersion, pgts_browser_list) {
-  test_browser_or_os(UA_CORE_DIR+"/test_resources/pgts_browser_list.yaml", true);
+  test_browser_or_os(UA_CORE_DIR + "/test_resources/pgts_browser_list.yaml", true);
 }
 
 TEST(OsVersion, additional_os_tests) {
-  test_browser_or_os(UA_CORE_DIR+"/test_resources/additional_os_tests.yaml", false);
+  test_browser_or_os(UA_CORE_DIR + "/test_resources/additional_os_tests.yaml", false);
 }
 
 TEST(DeviceFamily, test_device) {
-  test_device(UA_CORE_DIR+"/tests/test_device.yaml");
+  test_device(UA_CORE_DIR + "/tests/test_device.yaml");
 }
 
 }  // namespace

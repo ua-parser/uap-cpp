@@ -58,10 +58,11 @@ void test_browser_or_os(const std::string file_path, const bool browser) {
     const auto unparsed = string_field(test, "user_agent_string");
     const auto uagent = g_ua_parser.parse(unparsed);
     const auto& agent = browser ? uagent.browser : uagent.os;
-    ASSERT_EQ(major, agent.major);
-    ASSERT_EQ(minor, agent.minor);
-    ASSERT_EQ(patch, agent.patch);
-    ASSERT_EQ(family, agent.family);
+
+    EXPECT_EQ(major, agent.major);
+    EXPECT_EQ(minor, agent.minor);
+    EXPECT_EQ(patch, agent.patch);
+    EXPECT_EQ(family, agent.family);
   }
 }
 
@@ -75,9 +76,9 @@ void test_device(const std::string file_path) {
     const auto brand = string_field(test, "brand");
     const auto model = string_field(test, "model");
 
-    ASSERT_EQ(family, uagent.device.family);
-    ASSERT_EQ(brand, uagent.device.brand);
-    ASSERT_EQ(model, uagent.device.model);
+    EXPECT_EQ(family, uagent.device.family);
+    EXPECT_EQ(brand, uagent.device.brand);
+    EXPECT_EQ(model, uagent.device.model);
   }
 }
 
@@ -86,7 +87,7 @@ void test_device(const std::string file_path) {
 
 
 TEST(OsVersion, test_os) {
-  test_browser_or_os(UA_CORE_DIR+"/tests/test_os.yaml", false);
+   test_browser_or_os(UA_CORE_DIR+"/tests/test_os.yaml", false);
 }
 
 TEST(OsVersion, test_ua) {

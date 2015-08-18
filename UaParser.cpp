@@ -3,23 +3,53 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include <unordered_set>
+#include <map>
 
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
 #include <glog/logging.h>
 #include <yaml-cpp/yaml.h>
 
+typedef std::map<std::string::size_type, size_t> i2tuple;
+
+////////////
+// HELPERS //
+/////////////
+
+void replace_all_placeholders(std::string& ua_property, const boost::smatch &result, const i2tuple& replacement_map) {
+  for(auto iter = replacement_map.rbegin(); iter != replacement_map.rend(); ++iter) {
+        ua_property.replace(iter->first, 2, result[iter->second].str());
+  }
+  boost::algorithm::trim(ua_property);
+  return;
+}
+
+void mark_placeholders(i2tuple& replacement_map, const std::string& device_property) {
+  auto loc = device_property.rfind("$");
+  while (loc !=  std::string::npos) {
+    replacement_map[loc] = std::stoi(device_property.substr(loc + 1, 1));
+
+    if ( loc < 2 )
+      break;
+
+    loc = device_property.rfind("$", loc-2);
+  }
+  return;
+}
+
 namespace {
 
 struct GenericStore {
   std::string replacement;
+  i2tuple replacementMap;
   boost::regex regExpr;
 };
 
 struct DeviceStore : GenericStore {
   std::string brandReplacement;
   std::string modelReplacement;
+  i2tuple brandReplacementMap;
+  i2tuple modelReplacementMap;
 };
 
 struct AgentStore : GenericStore {
@@ -40,6 +70,8 @@ typedef AgentStore BrowserStore;
           boost::regex::optimize|boost::regex::normal);                  \
       } else if (key == repl) {                                          \
         agent_store.replacement = value;                                 \
+        mark_placeholders(agent_store.replacementMap,                    \
+          agent_store.replacement);                                      \
       } else if (key == maj_repl && !value.empty()) {                    \
         agent_store.majorVersionReplacement = value;                     \
       } else if (key == min_repl && !value.empty()) {                    \
@@ -82,19 +114,25 @@ struct UAStore {
           device.regExpr.assign(value,
             boost::regex::optimize|boost::regex::normal);
         }
-        else if ( key == "regex_flag" && value == "i" ) {
+        else if (key == "regex_flag" && value == "i") {
           regex_flag = true;
         } else if (key == "device_replacement") {
           device.replacement = value;
+          mark_placeholders(device.replacementMap,
+            device.replacement);
         } else if (key == "model_replacement") {
           device.modelReplacement = value;
+          mark_placeholders(device.modelReplacementMap,
+            device.modelReplacement);
         } else if (key == "brand_replacement") {
           device.brandReplacement = value;
+          mark_placeholders(device.brandReplacementMap,
+            device.brandReplacement);
         } else {
           CHECK(false);
         }
       }
-      if ( regex_flag == true ) {
+      if (regex_flag == true) {
         device.regExpr.assign(device.regExpr.str(),
           boost::regex::optimize|boost::regex::icase|boost::regex::normal);
       }
@@ -107,38 +145,8 @@ struct UAStore {
   std::vector<BrowserStore> browserStore;
 };
 
-
-////////////
-// HELPERS //
-/////////////
-
-//Device parsing is different than the other parsing in that a field can have many placeholders
-const char* placeholders[] = {"$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9"};
-void replace_all_placeholders(std::string& device_property, const boost::smatch &result) {
-  std::string::size_type loc;
-  for (size_t idx = 1; idx < result.size(); ++idx) {
-    loc = device_property.find(placeholders[idx-1]);
-    if (loc != std::string::npos) {
-      if (result[idx].matched) {
-        device_property.replace(loc,2,result[idx].str());
-      }
-      else
-        device_property.erase(loc,2);
-    }
-  }
-  // There should not be placehoders leftover. This is a Workaround ...
-  loc = device_property.find_first_of('$');
-  if (loc != std::string::npos && loc + 1 < device_property.size())
-    device_property.erase(loc,device_property.size());
-  return;
-}
-
-
-
-
 template<class AGENT, class AGENT_STORE>
 void fillAgent(AGENT& agent, const AGENT_STORE& store, const boost::smatch& m) {
-  CHECK(!m.empty());
   if (m.size() > 1) {
     agent.family = !store.replacement.empty()
       ? boost::regex_replace(store.replacement, boost::regex("\\$1"), m[1].str())
@@ -148,27 +156,30 @@ void fillAgent(AGENT& agent, const AGENT_STORE& store, const boost::smatch& m) {
       ? boost::regex_replace(store.replacement, boost::regex("\\$1"), m[0].str())
       : m[0];
   }
+  boost::algorithm::trim(agent.family);
+
+  // The chunk above is slightly faster than the one below.
+  // if ( store.replacement.empty() && m.size() > 1) {
+  //   agent.family = m[1].str();
+  // } else {
+  //     agent.family = store.replacement;
+  //     if ( ! store.replacementMap.empty()) {
+  //       replace_all_placeholders(agent.family,m,store.replacementMap);
+  //     }
+  // }
+
   if (!store.majorVersionReplacement.empty()) {
     agent.major = store.majorVersionReplacement;
-  } else if (m.size() > 2) {
-    const auto s = m[2].str();
-    if (!s.empty()) {
-      agent.major = s;
-    }
+  } else if (m.size() > 2 ) {
+    agent.major = m[2].str();
   }
   if (!store.minorVersionReplacement.empty()) {
     agent.minor = store.minorVersionReplacement;
-  } else if (m.size() > 3) {
-    const auto s = m[3].str();
-    if (!s.empty()) {
-      agent.minor = s;
-    }
+  } else if (m.size() > 3 ) {
+    agent.minor = m[3].str();
   }
-  if (m.size() > 4) {
-    const auto s = m[4].str();
-    if (!s.empty()) {
-      agent.patch = s;
-    }
+  if (m.size() > 4 ) {
+    agent.patch = m[4].str();
   }
 }
 
@@ -181,7 +192,6 @@ UserAgent parseImpl(const std::string& ua, const UAStore* ua_store) {
     boost::smatch m;
     if (boost::regex_search(ua, m, b.regExpr)) {
       fillAgent(browser, b, m);
-      boost::algorithm::trim(browser.family);
       break;
     } else {
       browser.family = "Other";
@@ -204,26 +214,27 @@ UserAgent parseImpl(const std::string& ua, const UAStore* ua_store) {
     boost::smatch m;
 
     if (boost::regex_search(ua, m, d.regExpr)) {
-      if ( d.replacement.empty() && m.size() > 1) {
+      if (d.replacement.empty() && m.size() > 1) {
         device.family = m[1].str();
       } else {
         device.family = d.replacement;
-        replace_all_placeholders(device.family, m);
-        boost::algorithm::trim(device.family);
+        if (!d.replacementMap.empty()) {
+          replace_all_placeholders(device.family,m,d.replacementMap);
+        }
       }
-
-      if ( ! d.brandReplacement.empty() ) {
+      if (!d.brandReplacement.empty()) {
         device.brand = d.brandReplacement;
-        replace_all_placeholders(device.brand, m);
-        boost::algorithm::trim(device.brand);
+        if (!d.brandReplacementMap.empty()) {
+          replace_all_placeholders(device.brand,m,d.brandReplacementMap);
+        }
       }
-
       if (d.modelReplacement.empty() && m.size() > 1) {
         device.model = m[1].str();
       } else {
           device.model = d.modelReplacement;
-          replace_all_placeholders(device.model, m);
-          boost::algorithm::trim(device.model);
+          if ( !d.modelReplacementMap.empty()) {
+            replace_all_placeholders(device.model,m,d.modelReplacementMap);
+          }
       }
       break;
     } else {

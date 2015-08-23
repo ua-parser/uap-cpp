@@ -13,8 +13,8 @@ const UserAgentParser g_ua_parser(UA_CORE_DIR + "/regexes.yaml");
 
 TEST(UserAgentParser, basic) {
   const auto uagent = g_ua_parser.parse(
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 5_1_1 like Mac OS X) AppleWebKit/534.46 "
-    "(KHTML, like Gecko) Version/5.1 Mobile/9B206 Safari/7534.48.3");
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 5_1_1 like Mac OS X) AppleWebKit/534.46 "
+      "(KHTML, like Gecko) Version/5.1 Mobile/9B206 Safari/7534.48.3");
   ASSERT_EQ("Mobile Safari", uagent.browser.family);
   ASSERT_EQ("5", uagent.browser.major);
   ASSERT_EQ("1", uagent.browser.minor);
@@ -83,8 +83,6 @@ void test_device(const std::string file_path) {
 }
 
 }  // namespace
-
-
 
 TEST(OsVersion, test_os) {
   test_browser_or_os(UA_CORE_DIR + "/tests/test_os.yaml", false);

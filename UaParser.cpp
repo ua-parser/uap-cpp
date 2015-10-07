@@ -31,6 +31,8 @@ typedef AgentStore BrowserStore;
       const std::string value = it.second().to<std::string>();           \
       if (key == "regex") {                                              \
         agent_store.regExpr = value;                                     \
+      } else if (key == "regex_flag") {                                  \
+        /* Ignore the regex_flag */                                      \
       } else if (key == repl) {                                          \
         agent_store.replacement = value;                                \
       } else if (key == maj_repl && !value.empty()) {                    \
@@ -39,6 +41,8 @@ typedef AgentStore BrowserStore;
         try {                                                            \
           agent_store.minorVersionReplacement = value;                   \
         } catch (...) {}                                                 \
+      } else if (key == "os_v3_replacement") {                           \
+        /* Ignore the os_v3_replacement. */                              \
       } else {                                                           \
         CHECK(false);                                                    \
       }                                                                  \
@@ -48,7 +52,7 @@ struct UAStore {
   explicit UAStore(const std::string& regexes_file_path) {
     std::ifstream in_stream(regexes_file_path);
     CHECK(in_stream.good());
-    
+
     YAML::Parser yaml_parser(in_stream);
     YAML::Node regexes;
     CHECK(yaml_parser.GetNextDocument(regexes));
@@ -77,8 +81,14 @@ struct UAStore {
         const std::string value = it.second().to<std::string>();
         if (key == "regex") {
           device.regExpr = value;
+        } else if (key == "regex_flag") {
+          /* Ignore the regex_flag */
         } else if (key == "device_replacement") {
           device.replacement = value;
+        } else if (key == "brand_replacement") {
+          // Ignore the brand. It's usually part of the device_replacement anyway.
+        } else if (key == "model_replacement") {
+          // Ignore the model. It's usually part of the device_replacement anyway.
         } else {
           CHECK(false);
         }
@@ -103,6 +113,15 @@ void fillAgent(AGENT& agent, const AGENT_STORE& store, const boost::smatch& m) {
     agent.family = !store.replacement.empty()
       ? boost::regex_replace(store.replacement, boost::regex("\\$1"), m[0].str())
       : m[0];
+  }
+  if (m.size() > 2) {
+    agent.family = boost::regex_replace(agent.family, boost::regex("\\$2"), m[2].str());
+  }
+  if (m.size() > 3) {
+    agent.family = boost::regex_replace(agent.family, boost::regex("\\$3"), m[3].str());
+  }
+  if (m.size() > 4) {
+    agent.family = boost::regex_replace(agent.family, boost::regex("\\$4"), m[4].str());
   }
   if (!store.majorVersionReplacement.empty()) {
     agent.major = store.majorVersionReplacement;
@@ -165,6 +184,15 @@ UserAgent parseImpl(const std::string& ua, const UAStore* ua_store) {
         device.family = !d.replacement.empty()
           ? boost::regex_replace(d.replacement, boost::regex("\\$1"), m[0].str())
           : m[0].str();
+      }
+      if (m.size() > 2) {
+        device.family = boost::regex_replace(device.family, boost::regex("\\$2"), m[2].str());
+      }
+      if (m.size() > 3) {
+        device.family = boost::regex_replace(device.family, boost::regex("\\$3"), m[3].str());
+      }
+      if (m.size() > 4) {
+        device.family = boost::regex_replace(device.family, boost::regex("\\$4"), m[4].str());
       }
       break;
     } else {

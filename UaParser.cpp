@@ -1,5 +1,6 @@
 #include "UaParser.h"
 
+#include <cassert>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -7,7 +8,6 @@
 
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
-#include <glog/logging.h>
 #include <yaml-cpp/yaml.h>
 
 typedef std::map<std::string::size_type, size_t> i2tuple;
@@ -61,7 +61,7 @@ typedef AgentStore OsStore;
 typedef AgentStore BrowserStore;
 
 #define FILL_AGENT_STORE(node, agent_store, repl, maj_repl, min_repl)                   \
-  CHECK(node.Type() == YAML::NodeType::Map);                                            \
+  assert(node.Type() == YAML::NodeType::Map);                                           \
   for (auto it = node.begin(); it != node.end(); ++it) {                                \
     const auto key = it->first.as<std::string>();                                       \
     const auto value = it->second.as<std::string>();                                    \
@@ -78,7 +78,7 @@ typedef AgentStore BrowserStore;
       } catch (...) {                                                                   \
       }                                                                                 \
     } else {                                                                            \
-      CHECK(false);                                                                     \
+      assert(false);                                                                    \
     }                                                                                   \
   }
 
@@ -121,7 +121,7 @@ struct UAStore {
           device.brandReplacement = value;
           mark_placeholders(device.brandReplacementMap, device.brandReplacement);
         } else {
-          CHECK(false);
+          assert(false);
         }
       }
       if (regex_flag == true) {

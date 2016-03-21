@@ -16,7 +16,6 @@ Dependencies
 ------------
 
 * boost_regex, boost_system, yaml-cpp (0.5 API)
-* glog (for the `CHECK` macro)
 * gtest (for testing)
 
 Author:

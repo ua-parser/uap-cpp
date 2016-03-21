@@ -1,5 +1,5 @@
 CC=g++
-LDFLAGS=-lboost_regex -lboost_system -lyaml-cpp -lglog -fPIC
+LDFLAGS=-lboost_regex -lboost_system -lyaml-cpp -fPIC
 CFLAGS=-std=c++0x -Wall -Werror -g -O3
 
 # wildcard object build target

@@ -1,18 +1,19 @@
 #include "UaParser.h"
 #include <fstream>
-#include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <yaml-cpp/yaml.h>
 #include <string>
 
 namespace {
 
-const UserAgentParser g_ua_parser("../regexes.yaml");
+static const std::string UA_CORE_DIR = "../uap-core";
+
+const UserAgentParser g_ua_parser(UA_CORE_DIR + "/regexes.yaml");
 
 TEST(UserAgentParser, basic) {
   const auto uagent = g_ua_parser.parse(
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 5_1_1 like Mac OS X) AppleWebKit/534.46 "
-    "(KHTML, like Gecko) Version/5.1 Mobile/9B206 Safari/7534.48.3");
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 5_1_1 like Mac OS X) AppleWebKit/534.46 "
+      "(KHTML, like Gecko) Version/5.1 Mobile/9B206 Safari/7534.48.3");
   ASSERT_EQ("Mobile Safari", uagent.browser.family);
   ASSERT_EQ("5", uagent.browser.major);
   ASSERT_EQ("1", uagent.browser.minor);
@@ -38,19 +39,15 @@ namespace {
 
 std::string string_field(const YAML::Node& root, const std::string& fname) {
   const auto& yaml_field = root[fname];
-  return YAML::IsNull(yaml_field) ? "" : yaml_field.to<std::string>();
+  return yaml_field.IsNull() ? "" : yaml_field.as<std::string>();
 }
 
-void test_browser_or_os(const char* file_path, const bool browser) {
-  std::ifstream in_stream(file_path);
-  CHECK(in_stream.good());
-  YAML::Parser yaml_parser(in_stream);
-  YAML::Node root;
-  CHECK(yaml_parser.GetNextDocument(root));
+void test_browser_or_os(const std::string file_path, const bool browser) {
+  auto root = YAML::LoadFile(file_path);
   const auto& test_cases = root["test_cases"];
   for (const auto& test : test_cases) {
     // TODO(alex): add support for JS user agent
-    if (test.FindValue("js_ua")) {
+    if (test["js_ua"]) {
       continue;
     }
     const auto major = string_field(test, "major");
@@ -60,52 +57,54 @@ void test_browser_or_os(const char* file_path, const bool browser) {
     const auto unparsed = string_field(test, "user_agent_string");
     const auto uagent = g_ua_parser.parse(unparsed);
     const auto& agent = browser ? uagent.browser : uagent.os;
-    ASSERT_EQ(major, agent.major);
-    ASSERT_EQ(minor, agent.minor);
-    ASSERT_EQ(patch, agent.patch);
-    ASSERT_EQ(family, agent.family);
+
+    EXPECT_EQ(major, agent.major);
+    EXPECT_EQ(minor, agent.minor);
+    EXPECT_EQ(patch, agent.patch);
+    EXPECT_EQ(family, agent.family);
   }
 }
 
-void test_device(const char* file_path) {
-  std::ifstream in_stream(file_path);
-  CHECK(in_stream.good());
-  YAML::Parser yaml_parser(in_stream);
-  YAML::Node root;
-  CHECK(yaml_parser.GetNextDocument(root));
+void test_device(const std::string file_path) {
+  auto root = YAML::LoadFile(file_path);
   const auto& test_cases = root["test_cases"];
   for (const auto& test : test_cases) {
     const auto unparsed = string_field(test, "user_agent_string");
     const auto uagent = g_ua_parser.parse(unparsed);
     const auto family = string_field(test, "family");
-    ASSERT_EQ(family, uagent.device.family);
+    const auto brand = string_field(test, "brand");
+    const auto model = string_field(test, "model");
+
+    EXPECT_EQ(family, uagent.device.family);
+    EXPECT_EQ(brand, uagent.device.brand);
+    EXPECT_EQ(model, uagent.device.model);
   }
 }
 
 }  // namespace
 
-TEST(BrowserVersion, test_user_agent_parser) {
-  test_browser_or_os("../test_resources/test_user_agent_parser.yaml", true);
+TEST(OsVersion, test_os) {
+  test_browser_or_os(UA_CORE_DIR + "/tests/test_os.yaml", false);
+}
+
+TEST(OsVersion, test_ua) {
+  test_browser_or_os(UA_CORE_DIR + "/tests/test_ua.yaml", true);
 }
 
 TEST(BrowserVersion, firefox_user_agent_strings) {
-  test_browser_or_os("../test_resources/firefox_user_agent_strings.yaml", true);
+  test_browser_or_os(UA_CORE_DIR + "/test_resources/firefox_user_agent_strings.yaml", true);
 }
 
 TEST(BrowserVersion, pgts_browser_list) {
-  test_browser_or_os("../test_resources/pgts_browser_list.yaml", true);
-}
-
-TEST(OsVersion, test_user_agent_parser_os) {
-  test_browser_or_os("../test_resources/test_user_agent_parser_os.yaml", false);
+  test_browser_or_os(UA_CORE_DIR + "/test_resources/pgts_browser_list.yaml", true);
 }
 
 TEST(OsVersion, additional_os_tests) {
-  test_browser_or_os("../test_resources/additional_os_tests.yaml", false);
+  test_browser_or_os(UA_CORE_DIR + "/test_resources/additional_os_tests.yaml", false);
 }
 
 TEST(DeviceFamily, test_device) {
-  test_device("../test_resources/test_device.yaml");
+  test_device(UA_CORE_DIR + "/tests/test_device.yaml");
 }
 
 }  // namespace

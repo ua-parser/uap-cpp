@@ -16,14 +16,10 @@ struct Agent : Generic {
   std::string minor;
   std::string patch;
 
-  std::string toString() const {
-    return family + " " + toVersionString();
-  }
+  std::string toString() const { return family + " " + toVersionString(); }
 
   std::string toVersionString() const {
-    return (major.empty() ? "0" : major) + "." +
-      (minor.empty() ? "0" : minor) + "." +
-      (patch.empty() ? "0" : patch);
+    return (major.empty() ? "0" : major) + "." + (minor.empty() ? "0" : minor) + "." + (patch.empty() ? "0" : patch);
   }
 };
 
@@ -36,13 +32,9 @@ struct UserAgent {
   Os os;
   Browser browser;
 
-  std::string toFullString() const {
-    return browser.toString() + "/" + os.toString();
-  }
+  std::string toFullString() const { return browser.toString() + "/" + os.toString(); }
 
-  bool isSpider() const {
-    return device.family == "Spider";
-  }
+  bool isSpider() const { return device.family == "Spider"; }
 };
 
 class UserAgentParser {

@@ -57,30 +57,33 @@ struct AgentStore : GenericStore {
   std::string minorVersionReplacement;
 };
 
-typedef AgentStore OsStore;
-typedef AgentStore BrowserStore;
-
-#define FILL_AGENT_STORE(node, agent_store, repl, maj_repl, min_repl)                   \
-  assert(node.Type() == YAML::NodeType::Map);                                           \
-  for (auto it = node.begin(); it != node.end(); ++it) {                                \
-    const auto key = it->first.as<std::string>();                                       \
-    const auto value = it->second.as<std::string>();                                    \
-    if (key == "regex") {                                                               \
-      agent_store.regExpr.assign(value, boost::regex::optimize | boost::regex::normal); \
-    } else if (key == repl) {                                                           \
-      agent_store.replacement = value;                                                  \
-      mark_placeholders(agent_store.replacementMap, agent_store.replacement);           \
-    } else if (key == maj_repl && !value.empty()) {                                     \
-      agent_store.majorVersionReplacement = value;                                      \
-    } else if (key == min_repl && !value.empty()) {                                     \
-      try {                                                                             \
-        agent_store.minorVersionReplacement = value;                                    \
-      } catch (...) {                                                                   \
-      }                                                                                 \
-    } else {                                                                            \
-      assert(false);                                                                    \
-    }                                                                                   \
+AgentStore fill_agent_store(const YAML::Node& node,
+                            const std::string& repl,
+                            const std::string& maj_repl,
+                            const std::string& min_repl) {
+  AgentStore agent_store;
+  assert(node.Type() == YAML::NodeType::Map);
+  for (auto it = node.begin(); it != node.end(); ++it) {
+    const auto key = it->first.as<std::string>();
+    const auto value = it->second.as<std::string>();
+    if (key == "regex") {
+      agent_store.regExpr.assign(value, boost::regex::optimize | boost::regex::normal);
+    } else if (key == repl) {
+      agent_store.replacement = value;
+      mark_placeholders(agent_store.replacementMap, agent_store.replacement);
+    } else if (key == maj_repl && !value.empty()) {
+      agent_store.majorVersionReplacement = value;
+    } else if (key == min_repl && !value.empty()) {
+      try {
+        agent_store.minorVersionReplacement = value;
+      } catch (...) {
+      }
+    } else {
+      assert(false);
+    }
   }
+  return agent_store;
+}
 
 struct UAStore {
   explicit UAStore(const std::string& regexes_file_path) {
@@ -88,15 +91,15 @@ struct UAStore {
 
     const auto& user_agent_parsers = regexes["user_agent_parsers"];
     for (const auto& user_agent : user_agent_parsers) {
-      BrowserStore browser;
-      FILL_AGENT_STORE(user_agent, browser, "family_replacement", "v1_replacement", "v2_replacement");
+      AgentStore browser;
+      fill_agent_store(browser, user_agent, "family_replacement", "v1_replacement", "v2_replacement");
       browserStore.push_back(browser);
     }
 
     const auto& os_parsers = regexes["os_parsers"];
     for (const auto& o : os_parsers) {
-      OsStore os;
-      FILL_AGENT_STORE(o, os, "os_replacement", "os_v1_replacement", "os_v2_replacement");
+      AgentStore os;
+      fill_agent_store(os, o, "os_replacement", "os_v1_replacement", "os_v2_replacement");
       osStore.push_back(os);
     }
 
@@ -133,8 +136,8 @@ struct UAStore {
   }
 
   std::vector<DeviceStore> deviceStore;
-  std::vector<OsStore> osStore;
-  std::vector<BrowserStore> browserStore;
+  std::vector<AgentStore> osStore;
+  std::vector<AgentStore> browserStore;
 };
 
 template <class AGENT, class AGENT_STORE>

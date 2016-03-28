@@ -30,6 +30,7 @@ struct DeviceStore : GenericStore {
 struct AgentStore : GenericStore {
   std::string majorVersionReplacement;
   std::string minorVersionReplacement;
+  std::string patchVersionReplacement;
 };
 
 void mark_placeholders(i2tuple& replacement_map, const std::string& device_property) {
@@ -47,8 +48,9 @@ void mark_placeholders(i2tuple& replacement_map, const std::string& device_prope
 
 AgentStore fill_agent_store(const YAML::Node& node,
                             const std::string& repl,
-                            const std::string& maj_repl,
-                            const std::string& min_repl) {
+                            const std::string& major_repl,
+                            const std::string& minor_repl,
+                            const std::string& patch_repl) {
   AgentStore agent_store;
   assert(node.Type() == YAML::NodeType::Map);
   for (auto it = node.begin(); it != node.end(); ++it) {
@@ -59,10 +61,12 @@ AgentStore fill_agent_store(const YAML::Node& node,
     } else if (key == repl) {
       agent_store.replacement = value;
       mark_placeholders(agent_store.replacementMap, agent_store.replacement);
-    } else if (key == maj_repl && !value.empty()) {
+    } else if (key == major_repl && !value.empty()) {
       agent_store.majorVersionReplacement = value;
-    } else if (key == min_repl && !value.empty()) {
+    } else if (key == minor_repl && !value.empty()) {
       agent_store.minorVersionReplacement = value;
+    } else if (key == patch_repl && !value.empty()) {
+      agent_store.patchVersionReplacement = value;
     } else {
       assert(false);
     }
@@ -76,13 +80,15 @@ struct UAStore {
 
     const auto& user_agent_parsers = regexes["user_agent_parsers"];
     for (const auto& user_agent : user_agent_parsers) {
-      const auto browser = fill_agent_store(user_agent, "family_replacement", "v1_replacement", "v2_replacement");
+      const auto browser =
+          fill_agent_store(user_agent, "family_replacement", "v1_replacement", "v2_replacement", "v3_replacement");
       browserStore.push_back(browser);
     }
 
     const auto& os_parsers = regexes["os_parsers"];
     for (const auto& o : os_parsers) {
-      const auto os = fill_agent_store(o, "os_replacement", "os_v1_replacement", "os_v2_replacement");
+      const auto os =
+          fill_agent_store(o, "os_replacement", "os_v1_replacement", "os_v2_replacement", "os_v3_replacement");
       osStore.push_back(os);
     }
 
@@ -154,7 +160,9 @@ void fill_agent(AGENT& agent, const AGENT_STORE& store, const boost::smatch& m) 
   } else if (m.size() > 3) {
     agent.minor = m[3].str();
   }
-  if (m.size() > 4) {
+  if (!store.patchVersionReplacement.empty()) {
+    agent.patch = store.patchVersionReplacement;
+  } else if (m.size() > 4) {
     agent.patch = m[4].str();
   }
 }

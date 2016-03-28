@@ -17,7 +17,7 @@ Dependencies
 
 * boost_regex, boost_system, yaml-cpp (0.5 API)
 * gtest (for testing)
-* uap-core from https://github.com/ua-parser/uap-core, same directory level as uap-cpp. The newest uap-core usable with uap-cpp is 09b6d1e. See https://github.com/asuhan/uap-cpp/issues/4.
+* uap-core from https://github.com/ua-parser/uap-core, same directory level as uap-cpp.
 
 Author:
 -------

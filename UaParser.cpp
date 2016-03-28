@@ -62,10 +62,7 @@ AgentStore fill_agent_store(const YAML::Node& node,
     } else if (key == maj_repl && !value.empty()) {
       agent_store.majorVersionReplacement = value;
     } else if (key == min_repl && !value.empty()) {
-      try {
-        agent_store.minorVersionReplacement = value;
-      } catch (...) {
-      }
+      agent_store.minorVersionReplacement = value;
     } else {
       assert(false);
     }

@@ -10,34 +10,9 @@
 #include <boost/algorithm/string.hpp>
 #include <yaml-cpp/yaml.h>
 
-typedef std::map<std::string::size_type, size_t> i2tuple;
-
-/////////////
-// HELPERS //
-/////////////
-
-void replace_all_placeholders(std::string& ua_property, const boost::smatch& result, const i2tuple& replacement_map) {
-  for (auto iter = replacement_map.rbegin(); iter != replacement_map.rend(); ++iter) {
-    ua_property.replace(iter->first, 2, result[iter->second].str());
-  }
-  boost::algorithm::trim(ua_property);
-  return;
-}
-
-void mark_placeholders(i2tuple& replacement_map, const std::string& device_property) {
-  auto loc = device_property.rfind("$");
-  while (loc != std::string::npos) {
-    replacement_map[loc] = std::stoi(device_property.substr(loc + 1, 1));
-
-    if (loc < 2)
-      break;
-
-    loc = device_property.rfind("$", loc - 2);
-  }
-  return;
-}
-
 namespace {
+
+typedef std::map<std::string::size_type, size_t> i2tuple;
 
 struct GenericStore {
   std::string replacement;
@@ -56,6 +31,19 @@ struct AgentStore : GenericStore {
   std::string majorVersionReplacement;
   std::string minorVersionReplacement;
 };
+
+void mark_placeholders(i2tuple& replacement_map, const std::string& device_property) {
+  auto loc = device_property.rfind("$");
+  while (loc != std::string::npos) {
+    replacement_map[loc] = std::stoi(device_property.substr(loc + 1, 1));
+
+    if (loc < 2)
+      break;
+
+    loc = device_property.rfind("$", loc - 2);
+  }
+  return;
+}
 
 AgentStore fill_agent_store(const YAML::Node& node,
                             const std::string& repl,
@@ -91,15 +79,13 @@ struct UAStore {
 
     const auto& user_agent_parsers = regexes["user_agent_parsers"];
     for (const auto& user_agent : user_agent_parsers) {
-      AgentStore browser;
-      fill_agent_store(browser, user_agent, "family_replacement", "v1_replacement", "v2_replacement");
+      const auto browser = fill_agent_store(user_agent, "family_replacement", "v1_replacement", "v2_replacement");
       browserStore.push_back(browser);
     }
 
     const auto& os_parsers = regexes["os_parsers"];
     for (const auto& o : os_parsers) {
-      AgentStore os;
-      fill_agent_store(os, o, "os_replacement", "os_v1_replacement", "os_v2_replacement");
+      const auto os = fill_agent_store(o, "os_replacement", "os_v1_replacement", "os_v2_replacement");
       osStore.push_back(os);
     }
 
@@ -141,7 +127,7 @@ struct UAStore {
 };
 
 template <class AGENT, class AGENT_STORE>
-void fillAgent(AGENT& agent, const AGENT_STORE& store, const boost::smatch& m) {
+void fill_agent(AGENT& agent, const AGENT_STORE& store, const boost::smatch& m) {
   if (m.size() > 1) {
     agent.family =
         !store.replacement.empty() ? boost::regex_replace(store.replacement, boost::regex("\\$1"), m[1].str()) : m[1];
@@ -176,14 +162,26 @@ void fillAgent(AGENT& agent, const AGENT_STORE& store, const boost::smatch& m) {
   }
 }
 
-UserAgent parseImpl(const std::string& ua, const UAStore* ua_store) {
+/////////////
+// HELPERS //
+/////////////
+
+void replace_all_placeholders(std::string& ua_property, const boost::smatch& result, const i2tuple& replacement_map) {
+  for (auto iter = replacement_map.rbegin(); iter != replacement_map.rend(); ++iter) {
+    ua_property.replace(iter->first, 2, result[iter->second].str());
+  }
+  boost::algorithm::trim(ua_property);
+  return;
+}
+
+UserAgent parse_impl(const std::string& ua, const UAStore* ua_store) {
   UserAgent uagent;
 
   for (const auto& b : ua_store->browserStore) {
     auto& browser = uagent.browser;
     boost::smatch m;
     if (boost::regex_search(ua, m, b.regExpr)) {
-      fillAgent(browser, b, m);
+      fill_agent(browser, b, m);
       break;
     } else {
       browser.family = "Other";
@@ -194,7 +192,7 @@ UserAgent parseImpl(const std::string& ua, const UAStore* ua_store) {
     auto& os = uagent.os;
     boost::smatch m;
     if (boost::regex_search(ua, m, o.regExpr)) {
-      fillAgent(os, o, m);
+      fill_agent(os, o, m);
       break;
     } else {
       os.family = "Other";
@@ -248,5 +246,5 @@ UserAgentParser::~UserAgentParser() {
 }
 
 UserAgent UserAgentParser::parse(const std::string& ua) const {
-  return parseImpl(ua, static_cast<const UAStore*>(ua_store_));
+  return parse_impl(ua, static_cast<const UAStore*>(ua_store_));
 }

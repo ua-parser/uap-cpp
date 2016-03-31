@@ -15,6 +15,7 @@ struct Agent : Generic {
   std::string major;
   std::string minor;
   std::string patch;
+  std::string patch_minor;
 
   std::string toString() const { return family + " " + toVersionString(); }
 

@@ -49,6 +49,7 @@ void test_browser_or_os(const std::string file_path, const bool browser) {
     const auto major = string_field(test, "major");
     const auto minor = string_field(test, "minor");
     const auto patch = string_field(test, "patch");
+    const auto patch_minor = browser ? "" : string_field(test, "patch_minor");
     const auto family = string_field(test, "family");
     const auto unparsed = string_field(test, "user_agent_string");
     const auto uagent = g_ua_parser.parse(unparsed);
@@ -57,6 +58,7 @@ void test_browser_or_os(const std::string file_path, const bool browser) {
     EXPECT_EQ(major, agent.major);
     EXPECT_EQ(minor, agent.minor);
     EXPECT_EQ(patch, agent.patch);
+    EXPECT_EQ(patch_minor, agent.patch_minor);
     EXPECT_EQ(family, agent.family);
   }
 }

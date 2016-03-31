@@ -31,6 +31,7 @@ struct AgentStore : GenericStore {
   std::string majorVersionReplacement;
   std::string minorVersionReplacement;
   std::string patchVersionReplacement;
+  std::string patchMinorVersionReplacement;
 };
 
 void mark_placeholders(i2tuple& replacement_map, const std::string& device_property) {
@@ -130,7 +131,7 @@ struct UAStore {
 };
 
 template <class AGENT, class AGENT_STORE>
-void fill_agent(AGENT& agent, const AGENT_STORE& store, const boost::smatch& m) {
+void fill_agent(AGENT& agent, const AGENT_STORE& store, const boost::smatch& m, const bool os) {
   if (m.size() > 1) {
     agent.family =
         !store.replacement.empty() ? boost::regex_replace(store.replacement, boost::regex("\\$1"), m[1].str()) : m[1];
@@ -165,6 +166,9 @@ void fill_agent(AGENT& agent, const AGENT_STORE& store, const boost::smatch& m) 
   } else if (m.size() > 4) {
     agent.patch = m[4].str();
   }
+  if (os && m.size() > 5) {
+    agent.patch_minor = m[5].str();
+  }
 }
 
 /////////////
@@ -186,7 +190,7 @@ UserAgent parse_impl(const std::string& ua, const UAStore* ua_store) {
     auto& browser = uagent.browser;
     boost::smatch m;
     if (boost::regex_search(ua, m, b.regExpr)) {
-      fill_agent(browser, b, m);
+      fill_agent(browser, b, m, false);
       break;
     } else {
       browser.family = "Other";
@@ -197,7 +201,7 @@ UserAgent parse_impl(const std::string& ua, const UAStore* ua_store) {
     auto& os = uagent.os;
     boost::smatch m;
     if (boost::regex_search(ua, m, o.regExpr)) {
-      fill_agent(os, o, m);
+      fill_agent(os, o, m, true);
       break;
     } else {
       os.family = "Other";

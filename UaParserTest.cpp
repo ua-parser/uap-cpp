@@ -91,6 +91,10 @@ TEST(BrowserVersion, firefox_user_agent_strings) {
   test_browser_or_os(UA_CORE_DIR + "/test_resources/firefox_user_agent_strings.yaml", true);
 }
 
+TEST(BrowserVersion, opera_mini_user_agent_strings) {
+  test_browser_or_os(UA_CORE_DIR + "/test_resources/opera_mini_user_agent_strings.yaml", true);
+}
+
 TEST(BrowserVersion, pgts_browser_list) {
   test_browser_or_os(UA_CORE_DIR + "/test_resources/pgts_browser_list.yaml", true);
 }

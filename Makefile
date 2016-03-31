@@ -1,11 +1,12 @@
 CC=g++
-LDFLAGS=-lboost_regex -lboost_system -lyaml-cpp -fPIC
-CFLAGS=-std=c++0x -Wall -Werror -g -O3
+LD=ld
+LDFLAGS=-lboost_regex -lboost_system -lyaml-cpp
+CFLAGS=-std=c++0x -Wall -Werror -fPIC -g -O3
 
 # wildcard object build target
 %.o: %.cpp
-	$(CC) -c $(CFLAGS) $*.cpp -o $*.o $(LDFLAGS)
-	@$(CC) -MM $(CFLAGS) $*.cpp $(LDFLAGS) > $*.d
+	$(CC) -c $(CFLAGS) $*.cpp -o $*.o
+	@$(CC) -MM $(CFLAGS) $*.cpp > $*.d
 
 uaparser_cpp: libuaparser_cpp.a
 
@@ -13,10 +14,10 @@ libuaparser_cpp.a: UaParser.o
 	ar rcs $@ $^
 
 libuaparser_cpp.so: UaParser.o
-	$(CC) $< -shared $(LDFLAGS) -o $@
+	$(LD) $< -shared $(LDFLAGS) -o $@
 
 UaParserTest: libuaparser_cpp.a UaParserTest.o
-	$(CC) $(CFLAGS) $^ -o $@ libuaparser_cpp.a $(LDFLAGS) -lgtest -lpthread
+	$(CC) $^ -o $@ libuaparser_cpp.a $(LDFLAGS) -lgtest -lpthread
 
 test: UaParserTest
 	./UaParserTest

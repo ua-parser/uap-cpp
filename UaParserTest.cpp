@@ -46,10 +46,6 @@ void test_browser_or_os(const std::string file_path, const bool browser) {
   auto root = YAML::LoadFile(file_path);
   const auto& test_cases = root["test_cases"];
   for (const auto& test : test_cases) {
-    // TODO(alex): add support for JS user agent
-    if (test["js_ua"]) {
-      continue;
-    }
     const auto major = string_field(test, "major");
     const auto minor = string_field(test, "minor");
     const auto patch = string_field(test, "patch");

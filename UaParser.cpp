@@ -183,33 +183,10 @@ void replace_all_placeholders(std::string& ua_property, const boost::smatch& res
   return;
 }
 
-UserAgent parse_impl(const std::string& ua, const UAStore* ua_store) {
-  UserAgent uagent;
-
-  for (const auto& b : ua_store->browserStore) {
-    auto& browser = uagent.browser;
-    boost::smatch m;
-    if (boost::regex_search(ua, m, b.regExpr)) {
-      fill_agent(browser, b, m, false);
-      break;
-    } else {
-      browser.family = "Other";
-    }
-  }
-
-  for (const auto& o : ua_store->osStore) {
-    auto& os = uagent.os;
-    boost::smatch m;
-    if (boost::regex_search(ua, m, o.regExpr)) {
-      fill_agent(os, o, m, true);
-      break;
-    } else {
-      os.family = "Other";
-    }
-  }
+Device parse_device_impl(const std::string& ua, const UAStore* ua_store) {
+  Device device;
 
   for (const auto& d : ua_store->deviceStore) {
-    auto& device = uagent.device;
     boost::smatch m;
 
     if (boost::regex_search(ua, m, d.regExpr)) {
@@ -241,7 +218,40 @@ UserAgent parse_impl(const std::string& ua, const UAStore* ua_store) {
       device.family = "Other";
     }
   }
-  return uagent;
+
+  return device;
+}
+
+Agent parse_browser_impl(const std::string& ua, const UAStore* ua_store) {
+  Agent browser;
+
+  for (const auto& b : ua_store->browserStore) {
+    boost::smatch m;
+    if (boost::regex_search(ua, m, b.regExpr)) {
+      fill_agent(browser, b, m, false);
+      break;
+    } else {
+      browser.family = "Other";
+    }
+  }
+
+  return browser;
+}
+
+Agent parse_os_impl(const std::string& ua, const UAStore* ua_store) {
+  Agent os;
+
+  for (const auto& o : ua_store->osStore) {
+    boost::smatch m;
+    if (boost::regex_search(ua, m, o.regExpr)) {
+      fill_agent(os, o, m, true);
+      break;
+    } else {
+      os.family = "Other";
+    }
+  }
+
+  return os;
 }
 
 }  // namespace
@@ -255,5 +265,11 @@ UserAgentParser::~UserAgentParser() {
 }
 
 UserAgent UserAgentParser::parse(const std::string& ua) const {
-  return parse_impl(ua, static_cast<const UAStore*>(ua_store_));
+  const auto ua_store = static_cast<const UAStore*>(ua_store_);
+
+  const auto device = parse_device_impl(ua, ua_store);
+  const auto os = parse_os_impl(ua, ua_store);
+  const auto browser = parse_browser_impl(ua, ua_store);
+
+  return {device, os, browser};
 }

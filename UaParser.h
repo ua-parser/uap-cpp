@@ -24,14 +24,11 @@ struct Agent : Generic {
   }
 };
 
-typedef Agent Os;
-typedef Agent Browser;
-
 struct UserAgent {
   Device device;
 
-  Os os;
-  Browser browser;
+  Agent os;
+  Agent browser;
 
   std::string toFullString() const { return browser.toString() + "/" + os.toString(); }
 

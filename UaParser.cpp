@@ -47,6 +47,35 @@ void mark_placeholders(i2tuple& replacement_map, const std::string& device_prope
   return;
 }
 
+DeviceStore fill_device_store(const YAML::Node& device_parser) {
+  DeviceStore device;
+  bool regex_flag = false;
+  for (auto it = device_parser.begin(); it != device_parser.end(); ++it) {
+    const auto key = it->first.as<std::string>();
+    const auto value = it->second.as<std::string>();
+    if (key == "regex") {
+      device.regExpr.assign(value, boost::regex::optimize | boost::regex::normal);
+    } else if (key == "regex_flag" && value == "i") {
+      regex_flag = true;
+    } else if (key == "device_replacement") {
+      device.replacement = value;
+      mark_placeholders(device.replacementMap, device.replacement);
+    } else if (key == "model_replacement") {
+      device.modelReplacement = value;
+      mark_placeholders(device.modelReplacementMap, device.modelReplacement);
+    } else if (key == "brand_replacement") {
+      device.brandReplacement = value;
+      mark_placeholders(device.brandReplacementMap, device.brandReplacement);
+    } else {
+      assert(false);
+    }
+  }
+  if (regex_flag == true) {
+    device.regExpr.assign(device.regExpr.str(), boost::regex::optimize | boost::regex::icase | boost::regex::normal);
+  }
+  return device;
+}
+
 AgentStore fill_agent_store(const YAML::Node& node,
                             const std::string& repl,
                             const std::string& major_repl,
@@ -94,34 +123,8 @@ struct UAStore {
     }
 
     const auto& device_parsers = regexes["device_parsers"];
-    for (const auto& d : device_parsers) {
-      DeviceStore device;
-      bool regex_flag = false;
-      for (auto it = d.begin(); it != d.end(); ++it) {
-        const auto key = it->first.as<std::string>();
-        const auto value = it->second.as<std::string>();
-        if (key == "regex") {
-          device.regExpr.assign(value, boost::regex::optimize | boost::regex::normal);
-        } else if (key == "regex_flag" && value == "i") {
-          regex_flag = true;
-        } else if (key == "device_replacement") {
-          device.replacement = value;
-          mark_placeholders(device.replacementMap, device.replacement);
-        } else if (key == "model_replacement") {
-          device.modelReplacement = value;
-          mark_placeholders(device.modelReplacementMap, device.modelReplacement);
-        } else if (key == "brand_replacement") {
-          device.brandReplacement = value;
-          mark_placeholders(device.brandReplacementMap, device.brandReplacement);
-        } else {
-          assert(false);
-        }
-      }
-      if (regex_flag == true) {
-        device.regExpr.assign(device.regExpr.str(),
-                              boost::regex::optimize | boost::regex::icase | boost::regex::normal);
-      }
-      deviceStore.push_back(device);
+    for (const auto& device_parser : device_parsers) {
+      deviceStore.push_back(fill_device_store(device_parser));
     }
   }
 
@@ -129,47 +132,6 @@ struct UAStore {
   std::vector<AgentStore> osStore;
   std::vector<AgentStore> browserStore;
 };
-
-template <class AGENT, class AGENT_STORE>
-void fill_agent(AGENT& agent, const AGENT_STORE& store, const boost::smatch& m, const bool os) {
-  if (m.size() > 1) {
-    agent.family =
-        !store.replacement.empty() ? boost::regex_replace(store.replacement, boost::regex("\\$1"), m[1].str()) : m[1];
-  } else {
-    agent.family =
-        !store.replacement.empty() ? boost::regex_replace(store.replacement, boost::regex("\\$1"), m[0].str()) : m[0];
-  }
-  boost::algorithm::trim(agent.family);
-
-  // The chunk above is slightly faster than the one below.
-  // if ( store.replacement.empty() && m.size() > 1) {
-  //   agent.family = m[1].str();
-  // } else {
-  //     agent.family = store.replacement;
-  //     if ( ! store.replacementMap.empty()) {
-  //       replace_all_placeholders(agent.family,m,store.replacementMap);
-  //     }
-  // }
-
-  if (!store.majorVersionReplacement.empty()) {
-    agent.major = store.majorVersionReplacement;
-  } else if (m.size() > 2) {
-    agent.major = m[2].str();
-  }
-  if (!store.minorVersionReplacement.empty()) {
-    agent.minor = store.minorVersionReplacement;
-  } else if (m.size() > 3) {
-    agent.minor = m[3].str();
-  }
-  if (!store.patchVersionReplacement.empty()) {
-    agent.patch = store.patchVersionReplacement;
-  } else if (m.size() > 4) {
-    agent.patch = m[4].str();
-  }
-  if (os && m.size() > 5) {
-    agent.patch_minor = m[5].str();
-  }
-}
 
 /////////////
 // HELPERS //
@@ -220,6 +182,47 @@ Device parse_device_impl(const std::string& ua, const UAStore* ua_store) {
   }
 
   return device;
+}
+
+template <class AGENT, class AGENT_STORE>
+void fill_agent(AGENT& agent, const AGENT_STORE& store, const boost::smatch& m, const bool os) {
+  if (m.size() > 1) {
+    agent.family =
+        !store.replacement.empty() ? boost::regex_replace(store.replacement, boost::regex("\\$1"), m[1].str()) : m[1];
+  } else {
+    agent.family =
+        !store.replacement.empty() ? boost::regex_replace(store.replacement, boost::regex("\\$1"), m[0].str()) : m[0];
+  }
+  boost::algorithm::trim(agent.family);
+
+  // The chunk above is slightly faster than the one below.
+  // if ( store.replacement.empty() && m.size() > 1) {
+  //   agent.family = m[1].str();
+  // } else {
+  //     agent.family = store.replacement;
+  //     if ( ! store.replacementMap.empty()) {
+  //       replace_all_placeholders(agent.family,m,store.replacementMap);
+  //     }
+  // }
+
+  if (!store.majorVersionReplacement.empty()) {
+    agent.major = store.majorVersionReplacement;
+  } else if (m.size() > 2) {
+    agent.major = m[2].str();
+  }
+  if (!store.minorVersionReplacement.empty()) {
+    agent.minor = store.minorVersionReplacement;
+  } else if (m.size() > 3) {
+    agent.minor = m[3].str();
+  }
+  if (!store.patchVersionReplacement.empty()) {
+    agent.patch = store.patchVersionReplacement;
+  } else if (m.size() > 4) {
+    agent.patch = m[4].str();
+  }
+  if (os && m.size() > 5) {
+    agent.patch_minor = m[5].str();
+  }
 }
 
 Agent parse_browser_impl(const std::string& ua, const UAStore* ua_store) {

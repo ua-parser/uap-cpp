@@ -15,7 +15,7 @@ To build and run the tests:
 Dependencies
 ------------
 
-* boost_regex, boost_system, yaml-cpp (0.5 API)
+* boost_regex, yaml-cpp (0.5 API)
 * gtest (for testing)
 * uap-core from https://github.com/ua-parser/uap-core, same directory level as uap-cpp.
 

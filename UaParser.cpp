@@ -1,6 +1,7 @@
 #include "UaParser.h"
 
 #include <cassert>
+#include <cstdlib>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -37,7 +38,8 @@ struct AgentStore : GenericStore {
 void mark_placeholders(i2tuple& replacement_map, const std::string& device_property) {
   auto loc = device_property.rfind("$");
   while (loc != std::string::npos) {
-    replacement_map[loc] = std::stoi(device_property.substr(loc + 1, 1));
+    const auto replacement = device_property.substr(loc + 1, 1);
+    replacement_map[loc] = strtol(replacement.c_str(), nullptr, 10);
 
     if (loc < 2)
       break;

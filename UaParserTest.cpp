@@ -4,6 +4,8 @@
 #include <yaml-cpp/yaml.h>
 #include <string>
 
+using namespace uap_cpp;
+
 namespace {
 
 static const std::string UA_CORE_DIR = "../uap-core";

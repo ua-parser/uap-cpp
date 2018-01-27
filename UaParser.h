@@ -5,6 +5,7 @@
 namespace uap_cpp {
 
 struct Generic {
+    Generic() : family("Other") {}
     std::string family;
 };
 

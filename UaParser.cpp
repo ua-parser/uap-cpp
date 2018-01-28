@@ -255,7 +255,7 @@ Agent parse_os_impl(const std::string& ua, const UAStore* ua_store) {
   return os;
 }
 
-} // namespace
+}  // namespace
 
 UserAgentParser::UserAgentParser(const std::string& regexes_file_path) : regexes_file_path_{regexes_file_path} {
   ua_store_ = new UAStore(regexes_file_path);

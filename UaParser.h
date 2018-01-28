@@ -20,9 +20,7 @@ struct Agent : Generic {
   std::string patch;
   std::string patch_minor;
 
-  std::string toString() const {
-    return family + " " + toVersionString();
-  }
+  std::string toString() const { return family + " " + toVersionString(); }
 
   std::string toVersionString() const {
     return (major.empty() ? "0" : major) + "." + (minor.empty() ? "0" : minor) + "." + (patch.empty() ? "0" : patch);
@@ -35,13 +33,9 @@ struct UserAgent {
   Agent os;
   Agent browser;
 
-  std::string toFullString() const {
-    return browser.toString() + "/" + os.toString();
-  }
+  std::string toFullString() const { return browser.toString() + "/" + os.toString(); }
 
-  bool isSpider() const {
-    return device.family == "Spider";
-  }
+  bool isSpider() const { return device.family == "Spider"; }
 };
 
 enum DeviceType {

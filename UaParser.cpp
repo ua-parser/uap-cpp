@@ -81,10 +81,10 @@ DeviceStore fill_device_store(const YAML::Node& device_parser) {
 }
 
 AgentStore fill_agent_store(const YAML::Node& node,
-    const std::string& repl,
-    const std::string& major_repl,
-    const std::string& minor_repl,
-    const std::string& patch_repl) {
+                            const std::string& repl,
+                            const std::string& major_repl,
+                            const std::string& minor_repl,
+                            const std::string& patch_repl) {
   AgentStore agent_store;
   assert(node.Type() == YAML::NodeType::Map);
   for (auto it = node.begin(); it != node.end(); ++it) {
@@ -201,10 +201,10 @@ void fill_agent(AGENT& agent, const AGENT_STORE& store, const boost::smatch& m, 
   // if ( store.replacement.empty() && m.size() > 1) {
   //   agent.family = m[1].str();
   // } else {
-  //   agent.family = store.replacement;
-  //   if ( ! store.replacementMap.empty()) {
-  //     replace_all_placeholders(agent.family,m,store.replacementMap);
-  //   }
+  //     agent.family = store.replacement;
+  //     if ( ! store.replacementMap.empty()) {
+  //       replace_all_placeholders(agent.family,m,store.replacementMap);
+  //     }
   // }
 
   if (!store.majorVersionReplacement.empty()) {
@@ -262,11 +262,11 @@ UserAgentParser::UserAgentParser(const std::string& regexes_file_path) : regexes
 }
 
 UserAgentParser::~UserAgentParser() {
-  delete static_cast<const UAStore*> (ua_store_);
+  delete static_cast<const UAStore*>(ua_store_);
 }
 
 UserAgent UserAgentParser::parse(const std::string& ua) const {
-  const auto ua_store = static_cast<const UAStore*> (ua_store_);
+  const auto ua_store = static_cast<const UAStore*>(ua_store_);
 
   try {
     const auto device = parse_device_impl(ua, ua_store);

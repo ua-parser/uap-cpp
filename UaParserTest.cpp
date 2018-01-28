@@ -4,13 +4,9 @@
 #include <yaml-cpp/yaml.h>
 #include <string>
 
-using namespace uap_cpp;
-
-namespace {
-
 static const std::string UA_CORE_DIR = "../uap-core";
 
-const UserAgentParser g_ua_parser(UA_CORE_DIR + "/regexes.yaml");
+const uap_cpp::UserAgentParser g_ua_parser(UA_CORE_DIR + "/regexes.yaml");
 
 TEST(UserAgentParser, basic) {
   const auto uagent = g_ua_parser.parse(
@@ -36,8 +32,6 @@ TEST(UserAgentParser, basic) {
 
   ASSERT_FALSE(uagent.isSpider());
 }
-
-namespace {
 
 std::string string_field(const YAML::Node& root, const std::string& fname) {
   const auto& yaml_field = root[fname];
@@ -81,8 +75,6 @@ void test_device(const std::string file_path) {
   }
 }
 
-}  // namespace
-
 TEST(OsVersion, test_os) {
   test_browser_or_os(UA_CORE_DIR + "/tests/test_os.yaml", false);
 }
@@ -110,8 +102,6 @@ TEST(OsVersion, additional_os_tests) {
 TEST(DeviceFamily, test_device) {
   test_device(UA_CORE_DIR + "/tests/test_device.yaml");
 }
-
-}  // namespace
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

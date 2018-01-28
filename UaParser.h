@@ -60,4 +60,5 @@ private:
   const std::string regexes_file_path_;
   const void* ua_store_;
 };
-}
+
+}  // namespace uap_cpp

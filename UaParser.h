@@ -2,7 +2,10 @@
 
 #include <string>
 
+namespace uap_cpp {
+
 struct Generic {
+  Generic() : family("Other") {}
   std::string family;
 };
 
@@ -35,15 +38,27 @@ struct UserAgent {
   bool isSpider() const { return device.family == "Spider"; }
 };
 
+enum DeviceType {
+  kUnknown = 0, kDesktop, kMobile, kTablet
+};
+
 class UserAgentParser {
- public:
+public:
   explicit UserAgentParser(const std::string& regexes_file_path);
 
   UserAgent parse(const std::string&) const;
 
+  Device parse_device(const std::string&) const;
+  Agent parse_os(const std::string&) const;
+  Agent parse_browser(const std::string&) const;
+  
+  DeviceType device_type(const std::string&) const;
+
   ~UserAgentParser();
 
- private:
+private:
   const std::string regexes_file_path_;
   const void* ua_store_;
 };
+
+}  // namespace uap_cpp

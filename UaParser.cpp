@@ -11,7 +11,7 @@
 #include <boost/algorithm/string.hpp>
 #include <yaml-cpp/yaml.h>
 
-namespace {
+namespace uap_cpp {
 
 typedef std::map<std::string::size_type, size_t> i2tuple;
 
@@ -178,8 +178,6 @@ Device parse_device_impl(const std::string& ua, const UAStore* ua_store) {
         }
       }
       break;
-    } else {
-      device.family = "Other";
     }
   }
 
@@ -208,7 +206,7 @@ void fill_agent(AGENT& agent, const AGENT_STORE& store, const boost::smatch& m, 
   // }
 
   if (!store.majorVersionReplacement.empty()) {
-    agent.major = store.majorVersionReplacement;
+    agent.major = boost::regex_replace(store.majorVersionReplacement, boost::regex("\\$1"), m[1].str());
   } else if (m.size() > 2) {
     agent.major = m[2].str();
   }
@@ -235,8 +233,6 @@ Agent parse_browser_impl(const std::string& ua, const UAStore* ua_store) {
     if (boost::regex_search(ua, m, b.regExpr)) {
       fill_agent(browser, b, m, false);
       break;
-    } else {
-      browser.family = "Other";
     }
   }
 
@@ -251,15 +247,11 @@ Agent parse_os_impl(const std::string& ua, const UAStore* ua_store) {
     if (boost::regex_search(ua, m, o.regExpr)) {
       fill_agent(os, o, m, true);
       break;
-    } else {
-      os.family = "Other";
     }
   }
 
   return os;
 }
-
-}  // namespace
 
 UserAgentParser::UserAgentParser(const std::string& regexes_file_path) : regexes_file_path_{regexes_file_path} {
   ua_store_ = new UAStore(regexes_file_path);
@@ -272,9 +264,55 @@ UserAgentParser::~UserAgentParser() {
 UserAgent UserAgentParser::parse(const std::string& ua) const {
   const auto ua_store = static_cast<const UAStore*>(ua_store_);
 
-  const auto device = parse_device_impl(ua, ua_store);
-  const auto os = parse_os_impl(ua, ua_store);
-  const auto browser = parse_browser_impl(ua, ua_store);
-
-  return {device, os, browser};
+  try {
+    const auto device = parse_device_impl(ua, ua_store);
+    const auto os = parse_os_impl(ua, ua_store);
+    const auto browser = parse_browser_impl(ua, ua_store);
+    return {device, os, browser};
+  } catch (...) {
+    return {Device(), Agent(), Agent()};
+  }
 }
+
+Device UserAgentParser::parse_device(const std::string& ua) const {
+  try {
+    return parse_device_impl(ua, static_cast<const UAStore*> (ua_store_));
+  } catch (...) {
+    return Device();
+  }
+}
+
+Agent UserAgentParser::parse_os(const std::string& ua) const {
+  try {
+    return parse_os_impl(ua, static_cast<const UAStore*> (ua_store_));
+  } catch (...) {
+    return Agent();
+  }
+}
+
+Agent UserAgentParser::parse_browser(const std::string& ua) const {
+  try {
+    return parse_browser_impl(ua, static_cast<const UAStore*> (ua_store_));
+  } catch (...) {
+    return Agent();
+  }
+}
+
+DeviceType UserAgentParser::device_type(const std::string& ua) const {
+  // https://gist.github.com/dalethedeveloper/1503252/931cc8b613aaa930ef92a4027916e6687d07feac
+  static boost::regex rx_mob("Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|NetFront|Silk-Accelerated|(hpw|web)OS|Fennec|Minimo|Opera M(obi|ini)|Blazer|Dolfin|Dolphin|Skyfire|Zune", boost::regex::optimize | boost::regex::normal);
+  static boost::regex rx_tabl("(tablet|ipad|playbook|silk)|(android(?!.*mobile))", boost::regex::icase | boost::regex::optimize | boost::regex::normal);
+  boost::smatch m;
+  try {
+    if (boost::regex_search(ua, m, rx_tabl)) {
+      return DeviceType::kTablet;
+    } else if (boost::regex_search(ua, m, rx_mob)) {
+      return DeviceType::kMobile;
+    }
+    return DeviceType::kDesktop;
+  } catch (...) {
+    return DeviceType::kUnknown;
+  }
+}
+
+}  // namespace uap_cpp

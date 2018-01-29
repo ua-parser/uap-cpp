@@ -11,7 +11,7 @@
 #include <boost/algorithm/string.hpp>
 #include <yaml-cpp/yaml.h>
 
-namespace uap_cpp {
+namespace {
 
 typedef std::map<std::string::size_type, size_t> i2tuple;
 
@@ -147,8 +147,8 @@ void replace_all_placeholders(std::string& ua_property, const boost::smatch& res
   return;
 }
 
-Device parse_device_impl(const std::string& ua, const UAStore* ua_store) {
-  Device device;
+uap_cpp::Device parse_device_impl(const std::string& ua, const UAStore* ua_store) {
+  uap_cpp::Device device;
 
   for (const auto& d : ua_store->deviceStore) {
     boost::smatch m;
@@ -225,8 +225,8 @@ void fill_agent(AGENT& agent, const AGENT_STORE& store, const boost::smatch& m, 
   }
 }
 
-Agent parse_browser_impl(const std::string& ua, const UAStore* ua_store) {
-  Agent browser;
+uap_cpp::Agent parse_browser_impl(const std::string& ua, const UAStore* ua_store) {
+  uap_cpp::Agent browser;
 
   for (const auto& b : ua_store->browserStore) {
     boost::smatch m;
@@ -239,8 +239,8 @@ Agent parse_browser_impl(const std::string& ua, const UAStore* ua_store) {
   return browser;
 }
 
-Agent parse_os_impl(const std::string& ua, const UAStore* ua_store) {
-  Agent os;
+uap_cpp::Agent parse_os_impl(const std::string& ua, const UAStore* ua_store) {
+  uap_cpp::Agent os;
 
   for (const auto& o : ua_store->osStore) {
     boost::smatch m;
@@ -252,6 +252,10 @@ Agent parse_os_impl(const std::string& ua, const UAStore* ua_store) {
 
   return os;
 }
+
+}  // namespace
+
+namespace uap_cpp {
 
 UserAgentParser::UserAgentParser(const std::string& regexes_file_path) : regexes_file_path_{regexes_file_path} {
   ua_store_ = new UAStore(regexes_file_path);

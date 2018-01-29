@@ -19,6 +19,11 @@ Dependencies
 * gtest (for testing)
 * uap-core from https://github.com/ua-parser/uap-core, same directory level as uap-cpp.
 
+Contributing
+------------
+
+Pull requests are welcome. Use `clang-format -i *.cpp *.h` to format the sources before sending the patch.
+
 Author:
 -------
 

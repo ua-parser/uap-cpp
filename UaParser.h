@@ -23,7 +23,8 @@ struct Agent : Generic {
   std::string toString() const { return family + " " + toVersionString(); }
 
   std::string toVersionString() const {
-    return (major.empty() ? "0" : major) + "." + (minor.empty() ? "0" : minor) + "." + (patch.empty() ? "0" : patch);
+    return (major.empty() ? "0" : major) + "." + (minor.empty() ? "0" : minor) +
+           "." + (patch.empty() ? "0" : patch);
   }
 };
 
@@ -33,17 +34,17 @@ struct UserAgent {
   Agent os;
   Agent browser;
 
-  std::string toFullString() const { return browser.toString() + "/" + os.toString(); }
+  std::string toFullString() const {
+    return browser.toString() + "/" + os.toString();
+  }
 
   bool isSpider() const { return device.family == "Spider"; }
 };
 
-enum DeviceType {
-  kUnknown = 0, kDesktop, kMobile, kTablet
-};
+enum DeviceType { kUnknown = 0, kDesktop, kMobile, kTablet };
 
 class UserAgentParser {
-public:
+ public:
   explicit UserAgentParser(const std::string& regexes_file_path);
 
   UserAgent parse(const std::string&) const;
@@ -51,12 +52,12 @@ public:
   Device parse_device(const std::string&) const;
   Agent parse_os(const std::string&) const;
   Agent parse_browser(const std::string&) const;
-  
+
   DeviceType device_type(const std::string&) const;
 
   ~UserAgentParser();
 
-private:
+ private:
   const std::string regexes_file_path_;
   const void* ua_store_;
 };

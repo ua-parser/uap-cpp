@@ -10,7 +10,8 @@ const uap_cpp::UserAgentParser g_ua_parser(UA_CORE_DIR + "/regexes.yaml");
 
 TEST(UserAgentParser, basic) {
   const auto uagent = g_ua_parser.parse(
-      "Mozilla/5.0 (iPhone; CPU iPhone OS 5_1_1 like Mac OS X) AppleWebKit/534.46 "
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 5_1_1 like Mac OS X) "
+      "AppleWebKit/534.46 "
       "(KHTML, like Gecko) Version/5.1 Mobile/9B206 Safari/7534.48.3");
   ASSERT_EQ("Mobile Safari", uagent.browser.family);
   ASSERT_EQ("5", uagent.browser.major);
@@ -84,19 +85,23 @@ TEST(OsVersion, test_ua) {
 }
 
 TEST(BrowserVersion, firefox_user_agent_strings) {
-  test_browser_or_os(UA_CORE_DIR + "/test_resources/firefox_user_agent_strings.yaml", true);
+  test_browser_or_os(
+      UA_CORE_DIR + "/test_resources/firefox_user_agent_strings.yaml", true);
 }
 
 TEST(BrowserVersion, opera_mini_user_agent_strings) {
-  test_browser_or_os(UA_CORE_DIR + "/test_resources/opera_mini_user_agent_strings.yaml", true);
+  test_browser_or_os(
+      UA_CORE_DIR + "/test_resources/opera_mini_user_agent_strings.yaml", true);
 }
 
 TEST(BrowserVersion, pgts_browser_list) {
-  test_browser_or_os(UA_CORE_DIR + "/test_resources/pgts_browser_list.yaml", true);
+  test_browser_or_os(UA_CORE_DIR + "/test_resources/pgts_browser_list.yaml",
+                     true);
 }
 
 TEST(OsVersion, additional_os_tests) {
-  test_browser_or_os(UA_CORE_DIR + "/test_resources/additional_os_tests.yaml", false);
+  test_browser_or_os(UA_CORE_DIR + "/test_resources/additional_os_tests.yaml",
+                     false);
 }
 
 TEST(DeviceFamily, test_device) {

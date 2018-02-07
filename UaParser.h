@@ -41,7 +41,7 @@ struct UserAgent {
   bool isSpider() const { return device.family == "Spider"; }
 };
 
-enum DeviceType { kUnknown = 0, kDesktop, kMobile, kTablet };
+enum class DeviceType { kUnknown = 0, kDesktop, kMobile, kTablet };
 
 class UserAgentParser {
  public:

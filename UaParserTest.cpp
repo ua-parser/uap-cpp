@@ -131,6 +131,11 @@ TEST(OsVersion, additional_os_tests) {
                      false);
 }
 
+TEST(BrowserVersion, podcasting_user_agent_strings) {
+  test_browser_or_os(
+      UA_CORE_DIR + "/test_resources/podcasting_user_agent_strings.yaml", true);
+}
+
 TEST(DeviceFamily, test_device) {
   test_device(UA_CORE_DIR + "/tests/test_device.yaml");
 }

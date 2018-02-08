@@ -4,7 +4,7 @@
 #include <yaml-cpp/yaml.h>
 #include <string>
 
-static const std::string UA_CORE_DIR = "../uap-core";
+static const std::string UA_CORE_DIR = "./uap-core";
 
 const uap_cpp::UserAgentParser g_ua_parser(UA_CORE_DIR + "/regexes.yaml");
 

@@ -329,7 +329,7 @@ Agent UserAgentParser::parse_browser(const std::string& ua) const {
   }
 }
 
-DeviceType UserAgentParser::device_type(const std::string& ua) const {
+DeviceType UserAgentParser::device_type(const std::string& ua) {
   boost::regbase::flag_type rx_mob_flag =
       boost::regex::optimize | boost::regex::normal;
   // https://gist.github.com/dalethedeveloper/1503252/931cc8b613aaa930ef92a4027916e6687d07feac

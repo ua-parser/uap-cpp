@@ -4,7 +4,9 @@
 #include <yaml-cpp/yaml.h>
 #include <string>
 
-static const std::string UA_CORE_DIR = "./uap-core";
+namespace {
+
+const std::string UA_CORE_DIR = "./uap-core";
 
 const uap_cpp::UserAgentParser g_ua_parser(UA_CORE_DIR + "/regexes.yaml");
 
@@ -32,6 +34,31 @@ TEST(UserAgentParser, basic) {
   ASSERT_EQ("iPhone", uagent.device.family);
 
   ASSERT_FALSE(uagent.isSpider());
+}
+
+TEST(UserAgentParser, DeviceTypeMobile) {
+  ASSERT_TRUE(uap_cpp::UserAgentParser::device_type(
+                  "Mozilla/5.0 (iPhone; CPU iPhone OS "
+                  "5_1_1 like Mac OS X) AppleWebKit/534.46 "
+                  "(KHTML, like Gecko) Version/5.1 "
+                  "Mobile/9B206 Safari/7534.48.3") ==
+              uap_cpp::DeviceType::kMobile);
+}
+
+TEST(UserAgentParser, DeviceTypeTablet) {
+  ASSERT_TRUE(uap_cpp::UserAgentParser::device_type(
+                  "Mozilla/5.0 (Linux; U; en-us; KFTT Build/IML74K) "
+                  "AppleWebKit/535.19 (KHTML, like Gecko) Silk/2.0 "
+                  "Safari/535.19 Silk-Accelerated=false") ==
+              uap_cpp::DeviceType::kTablet);
+}
+
+TEST(UserAgentParser, DeviceTypeDesktop) {
+  ASSERT_TRUE(
+      uap_cpp::UserAgentParser::device_type(
+          "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.4 (KHTML, like "
+          "Gecko) Chrome/98 Safari/537.4 (StatusCake)") ==
+      uap_cpp::DeviceType::kDesktop);
 }
 
 std::string string_field(const YAML::Node& root, const std::string& fname) {
@@ -107,6 +134,8 @@ TEST(OsVersion, additional_os_tests) {
 TEST(DeviceFamily, test_device) {
   test_device(UA_CORE_DIR + "/tests/test_device.yaml");
 }
+
+}  // namespace
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

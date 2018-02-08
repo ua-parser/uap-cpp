@@ -53,7 +53,7 @@ class UserAgentParser {
   Agent parse_os(const std::string&) const;
   Agent parse_browser(const std::string&) const;
 
-  DeviceType device_type(const std::string&) const;
+  static DeviceType device_type(const std::string&);
 
   ~UserAgentParser();
 

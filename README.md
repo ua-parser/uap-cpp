@@ -12,7 +12,7 @@ To build and run the tests:
 
     $ make test
 
-A recent (GCC >= 6 or Clang >= 3.9 both work) C++11 compiler is required.
+A recent (GCC >= 4.8 or Clang >= 3.9 both work) C++11 compiler is required.
 
 Dependencies
 ------------

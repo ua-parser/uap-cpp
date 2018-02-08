@@ -47,13 +47,13 @@ class UserAgentParser {
  public:
   explicit UserAgentParser(const std::string& regexes_file_path);
 
-  UserAgent parse(const std::string&) const;
+  UserAgent parse(const std::string&) const noexcept;
 
-  Device parse_device(const std::string&) const;
-  Agent parse_os(const std::string&) const;
-  Agent parse_browser(const std::string&) const;
+  Device parse_device(const std::string&) const noexcept;
+  Agent parse_os(const std::string&) const noexcept;
+  Agent parse_browser(const std::string&) const noexcept;
 
-  static DeviceType device_type(const std::string&);
+  static DeviceType device_type(const std::string&) noexcept;
 
   ~UserAgentParser();
 

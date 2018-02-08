@@ -292,7 +292,7 @@ UserAgentParser::~UserAgentParser() {
   delete static_cast<const UAStore*>(ua_store_);
 }
 
-UserAgent UserAgentParser::parse(const std::string& ua) const {
+UserAgent UserAgentParser::parse(const std::string& ua) const noexcept {
   const auto ua_store = static_cast<const UAStore*>(ua_store_);
 
   try {
@@ -305,7 +305,7 @@ UserAgent UserAgentParser::parse(const std::string& ua) const {
   }
 }
 
-Device UserAgentParser::parse_device(const std::string& ua) const {
+Device UserAgentParser::parse_device(const std::string& ua) const noexcept {
   try {
     return parse_device_impl(ua, static_cast<const UAStore*>(ua_store_));
   } catch (...) {
@@ -313,7 +313,7 @@ Device UserAgentParser::parse_device(const std::string& ua) const {
   }
 }
 
-Agent UserAgentParser::parse_os(const std::string& ua) const {
+Agent UserAgentParser::parse_os(const std::string& ua) const noexcept {
   try {
     return parse_os_impl(ua, static_cast<const UAStore*>(ua_store_));
   } catch (...) {
@@ -321,7 +321,7 @@ Agent UserAgentParser::parse_os(const std::string& ua) const {
   }
 }
 
-Agent UserAgentParser::parse_browser(const std::string& ua) const {
+Agent UserAgentParser::parse_browser(const std::string& ua) const noexcept {
   try {
     return parse_browser_impl(ua, static_cast<const UAStore*>(ua_store_));
   } catch (...) {
@@ -329,7 +329,7 @@ Agent UserAgentParser::parse_browser(const std::string& ua) const {
   }
 }
 
-DeviceType UserAgentParser::device_type(const std::string& ua) {
+DeviceType UserAgentParser::device_type(const std::string& ua) noexcept {
   boost::regbase::flag_type rx_mob_flag =
       boost::regex::optimize | boost::regex::normal;
   // https://gist.github.com/dalethedeveloper/1503252/931cc8b613aaa930ef92a4027916e6687d07feac

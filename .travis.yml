@@ -1,0 +1,11 @@
+before_install:
+- sudo apt-get update -qq
+- sudo apt-get install -qq libboost-regex-dev libyaml-cpp-dev cmake libgtest-dev
+- cd /usr/src/gtest
+- sudo cmake CMakeLists.txt
+- sudo make
+- sudo cp *.a /usr/lib
+- cd -
+script:
+- make test
+language: cpp

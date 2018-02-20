@@ -202,8 +202,7 @@ uap_cpp::Device parse_device_impl(const std::string& ua,
 template <class AGENT, class AGENT_STORE>
 void fill_agent(AGENT& agent,
                 const AGENT_STORE& store,
-                const boost::smatch& m,
-                const bool os) {
+                const boost::smatch& m) {
   if (m.size() > 1) {
     agent.family =
         !store.replacement.empty()
@@ -245,7 +244,7 @@ void fill_agent(AGENT& agent,
   } else if (m.size() > 4) {
     agent.patch = m[4].str();
   }
-  if (os && m.size() > 5) {
+  if (m.size() == 6 && (!(*m[5].second) || *m[5].second != '.')) {
     agent.patch_minor = m[5].str();
   }
 }
@@ -257,7 +256,7 @@ uap_cpp::Agent parse_browser_impl(const std::string& ua,
   for (const auto& b : ua_store->browserStore) {
     boost::smatch m;
     if (boost::regex_search(ua, m, b.regExpr)) {
-      fill_agent(browser, b, m, false);
+      fill_agent(browser, b, m);
       break;
     }
   }
@@ -271,7 +270,7 @@ uap_cpp::Agent parse_os_impl(const std::string& ua, const UAStore* ua_store) {
   for (const auto& o : ua_store->osStore) {
     boost::smatch m;
     if (boost::regex_search(ua, m, o.regExpr)) {
-      fill_agent(os, o, m, true);
+      fill_agent(os, o, m);
       break;
     }
   }

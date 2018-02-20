@@ -61,6 +61,11 @@ TEST(UserAgentParser, DeviceTypeDesktop) {
       uap_cpp::DeviceType::kDesktop);
 }
 
+bool has_field(const YAML::Node& root, const std::string& fname) {
+  const auto& yaml_field = root[fname];
+  return yaml_field.IsDefined();
+}
+
 std::string string_field(const YAML::Node& root, const std::string& fname) {
   const auto& yaml_field = root[fname];
   return yaml_field.IsNull() ? "" : yaml_field.as<std::string>();
@@ -73,7 +78,9 @@ void test_browser_or_os(const std::string file_path, const bool browser) {
     const auto major = string_field(test, "major");
     const auto minor = string_field(test, "minor");
     const auto patch = string_field(test, "patch");
-    const auto patch_minor = browser ? "" : string_field(test, "patch_minor");
+    const bool has_patch_minor = has_field(test, "patch_minor");
+    const auto patch_minor =
+        has_patch_minor ? string_field(test, "patch_minor") : "";
     const auto family = string_field(test, "family");
     const auto unparsed = string_field(test, "user_agent_string");
     const auto uagent = g_ua_parser.parse(unparsed);
@@ -82,7 +89,9 @@ void test_browser_or_os(const std::string file_path, const bool browser) {
     EXPECT_EQ(major, agent.major);
     EXPECT_EQ(minor, agent.minor);
     EXPECT_EQ(patch, agent.patch);
-    EXPECT_EQ(patch_minor, agent.patch_minor);
+    if (has_patch_minor) {
+      EXPECT_EQ(patch_minor, agent.patch_minor);
+    }
     EXPECT_EQ(family, agent.family);
   }
 }

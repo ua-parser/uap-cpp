@@ -1,4 +1,6 @@
-LDFLAGS=-lboost_regex -lyaml-cpp
+ifndef LDFLAGS
+	LDFLAGS=-lboost_regex -lyaml-cpp
+endif
 ifndef CXXFLAGS
 	CXXFLAGS=-std=c++0x -Wall -Werror -fPIC -g -O3
 endif

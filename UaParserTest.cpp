@@ -1,8 +1,9 @@
-#include "UaParser.h"
-#include <fstream>
 #include <gtest/gtest.h>
 #include <yaml-cpp/yaml.h>
-#include <string>
+#include "UaParser.h"
+#ifdef WITH_MT_TEST
+#include <future>
+#endif  // WITH_MT_TEST
 
 namespace {
 
@@ -148,6 +149,76 @@ TEST(BrowserVersion, podcasting_user_agent_strings) {
 TEST(DeviceFamily, test_device) {
   test_device(UA_CORE_DIR + "/tests/test_device.yaml");
 }
+
+#ifdef WITH_MT_TEST
+namespace {
+
+void do_multithreaded_test(const std::function<void()>& work) {
+  static constexpr int NUM_WORKERS = 4;
+
+  std::vector<std::future<void>> workers;
+  for (int i = 0; i < NUM_WORKERS; ++i) {
+    workers.push_back(std::async(std::launch::async, [&work]() { work(); }));
+  }
+  for (auto& worker : workers) {
+    worker.wait();
+  }
+}
+
+}  // namespace
+
+TEST(OsVersion, test_os_mt) {
+  do_multithreaded_test(
+      [] { test_browser_or_os(UA_CORE_DIR + "/tests/test_os.yaml", false); });
+}
+
+TEST(OsVersion, test_ua_mt) {
+  do_multithreaded_test(
+      [] { test_browser_or_os(UA_CORE_DIR + "/tests/test_ua.yaml", true); });
+}
+
+TEST(BrowserVersion, firefox_user_agent_strings_mt) {
+  do_multithreaded_test([] {
+    test_browser_or_os(
+        UA_CORE_DIR + "/test_resources/firefox_user_agent_strings.yaml", true);
+  });
+}
+
+TEST(BrowserVersion, opera_mini_user_agent_strings_mt) {
+  do_multithreaded_test([] {
+    test_browser_or_os(
+        UA_CORE_DIR + "/test_resources/opera_mini_user_agent_strings.yaml",
+        true);
+  });
+}
+
+TEST(BrowserVersion, pgts_browser_list_mt) {
+  do_multithreaded_test([] {
+    test_browser_or_os(UA_CORE_DIR + "/test_resources/pgts_browser_list.yaml",
+                       true);
+  });
+}
+
+TEST(OsVersion, additional_os_tests_mt) {
+  do_multithreaded_test([] {
+    test_browser_or_os(UA_CORE_DIR + "/test_resources/additional_os_tests.yaml",
+                       false);
+  });
+}
+
+TEST(BrowserVersion, podcasting_user_agent_strings_mt) {
+  do_multithreaded_test([] {
+    test_browser_or_os(
+        UA_CORE_DIR + "/test_resources/podcasting_user_agent_strings.yaml",
+        true);
+  });
+}
+
+TEST(DeviceFamily, test_device_mt) {
+  do_multithreaded_test(
+      [] { test_device(UA_CORE_DIR + "/tests/test_device.yaml"); });
+}
+#endif  // WITH_MT_TEST
 
 }  // namespace
 

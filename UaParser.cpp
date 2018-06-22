@@ -3,13 +3,13 @@
 #include <cassert>
 #include <cstdlib>
 #include <fstream>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
-#include <boost/regex.hpp>
-#include <boost/algorithm/string.hpp>
 #include <yaml-cpp/yaml.h>
+#include <boost/algorithm/string.hpp>
+#include <boost/regex.hpp>
 
 namespace {
 
@@ -332,12 +332,12 @@ DeviceType UserAgentParser::device_type(const std::string& ua) noexcept {
   boost::regbase::flag_type rx_mob_flag =
       boost::regex::optimize | boost::regex::normal;
   // https://gist.github.com/dalethedeveloper/1503252/931cc8b613aaa930ef92a4027916e6687d07feac
-  static boost::regex rx_mob(
+  static const boost::regex rx_mob(
       "Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|NetFront|Silk-"
       "Accelerated|(hpw|web)OS|Fennec|Minimo|Opera "
       "M(obi|ini)|Blazer|Dolfin|Dolphin|Skyfire|Zune",
       rx_mob_flag);
-  static boost::regex rx_tabl(
+  static const boost::regex rx_tabl(
       "(tablet|ipad|playbook|silk)|(android(?!.*mobile))",
       boost::regex::icase | boost::regex::optimize | boost::regex::normal);
   boost::smatch m;

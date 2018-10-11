@@ -99,11 +99,17 @@ AgentStore fill_agent_store(const YAML::Node& node,
       agent_store.replacement = value;
       mark_placeholders(agent_store.replacementMap, agent_store.replacement);
     } else if (key == major_repl && !value.empty()) {
-      agent_store.majorVersionReplacement = value;
+      if (value != "$2") {
+        agent_store.majorVersionReplacement = value;
+      }
     } else if (key == minor_repl && !value.empty()) {
-      agent_store.minorVersionReplacement = value;
+      if (value != "$3") {
+        agent_store.minorVersionReplacement = value;
+      }
     } else if (key == patch_repl && !value.empty()) {
-      agent_store.patchVersionReplacement = value;
+      if (value != "$4") {
+        agent_store.patchVersionReplacement = value;
+      }
     } else {
       assert(false);
     }

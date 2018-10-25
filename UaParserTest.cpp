@@ -90,7 +90,7 @@ void test_browser_or_os(const std::string file_path, const bool browser) {
     EXPECT_EQ(major, agent.major);
     EXPECT_EQ(minor, agent.minor);
     EXPECT_EQ(patch, agent.patch);
-    if (has_patch_minor) {
+    if (has_patch_minor && !browser) {
       EXPECT_EQ(patch_minor, agent.patch_minor);
     }
     EXPECT_EQ(family, agent.family);

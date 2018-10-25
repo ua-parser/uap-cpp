@@ -19,7 +19,7 @@ Dependencies
 
 * boost_regex, yaml-cpp (0.5 API)
 * gtest (for testing)
-* [uap-core](https://github.com/ua-parser/uap-core), same directory level as uap-cpp. You can clone this repo with --recurse-submodules to get it.
+* [uap-core](https://github.com/ua-parser/uap-core), same directory level as uap-cpp. You can clone this repo with --recurse-submodules to get it. Alternatively, run `git submodule update --init`.
 
 Contributing
 ------------

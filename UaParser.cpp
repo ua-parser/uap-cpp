@@ -241,12 +241,14 @@ void fill_agent(AGENT& agent,
     agent.major = m[2].str();
   }
   if (!store.minorVersionReplacement.empty()) {
-    agent.minor = store.minorVersionReplacement;
+    agent.minor = boost::regex_replace(
+        store.minorVersionReplacement, boost::regex("\\$2"), m[2].str());
   } else if (m.size() > 3) {
     agent.minor = m[3].str();
   }
   if (!store.patchVersionReplacement.empty()) {
-    agent.patch = store.patchVersionReplacement;
+    agent.patch = boost::regex_replace(
+        store.patchVersionReplacement, boost::regex("\\$3"), m[3].str());
   } else if (m.size() > 4) {
     agent.patch = m[4].str();
   }

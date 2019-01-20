@@ -111,7 +111,7 @@ AgentStore fill_agent_store(const YAML::Node& node,
         agent_store.patchVersionReplacement = value;
       }
     } else {
-      assert(false);
+      // Ignore invalid key.
     }
   }
   return agent_store;

@@ -17,7 +17,7 @@ libuaparser_cpp.so: UaParser.o
 UaParserTest: libuaparser_cpp.a UaParserTest.o
 	$(CXX) $^ -o $@ libuaparser_cpp.a $(LDFLAGS) -lgtest -lpthread
 
-test: UaParserTest
+test: UaParserTest libuaparser_cpp.so
 	./UaParserTest
 
 # clean everything generated

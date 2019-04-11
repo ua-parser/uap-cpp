@@ -33,6 +33,17 @@
 *.out
 *.app
 
+# MSVC
+.vs
+*.sln.DotSettings.user
+*.vcxproj.user
+/Debug
+/Release
+/x64/Debug
+/x64/Release
+/packages
+
+
 nbproject
 build
 UaParserTest

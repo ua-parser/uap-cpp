@@ -2,8 +2,22 @@
 
 namespace {
 
-const char* get_closing_parenthesis(const uap_cpp::StringView& view,
-                                    bool* had_alternative_operators = nullptr) {
+inline char get_corresponding_end_char(char start_char) {
+  switch (start_char) {
+    case '(':
+      return ')';
+    case '[':
+      return ']';
+    case '{':
+      return '}';
+    default:
+      return '\0';
+  }
+}
+
+inline const char* get_closing_parenthesis(
+    const uap_cpp::StringView& view,
+    bool* had_alternative_operators = nullptr) {
   if (had_alternative_operators) {
     *had_alternative_operators = false;
   }
@@ -11,28 +25,14 @@ const char* get_closing_parenthesis(const uap_cpp::StringView& view,
   const char* s = view.start();
 
   char start_char = *s;
-  char end_char;
-
-  bool may_be_nested;
-  int level = 0;
-  switch (start_char) {
-  case '(':
-    end_char = ')';
-    may_be_nested = true;
-    break;
-  case '[':
-    end_char = ']';
-    may_be_nested = false;
-    break;
-  case '{':
-    end_char = '}';
-    may_be_nested = false;
-    break;
-  default:
+  char end_char = get_corresponding_end_char(start_char);
+  if (!end_char) {
     return nullptr;
   }
   ++s;
 
+  int level = 0;
+  bool may_be_nested = start_char == '(';
   if (may_be_nested) {
     ++level;
   }
@@ -77,4 +77,4 @@ inline bool is_optional_operator(const uap_cpp::StringView& view) {
   return *s == '*' || *s == '?';
 }
 
-}
+}  // namespace

@@ -51,7 +51,8 @@ void AlternativeExpander::expand(const StringView& view,
             --level;
           }
         } else if (*s == '[') {
-          const char* closing_parenthesis = get_closing_parenthesis(view.from(s));
+          const char* closing_parenthesis =
+              get_closing_parenthesis(view.from(s));
           if (closing_parenthesis) {
             // Skip character-level alternative block
             s = closing_parenthesis;
@@ -84,7 +85,8 @@ void AlternativeExpander::expand(const StringView& view,
       if (*s == '(') {
         ++level;
         if (level == 1) {
-          const char* closing_parenthesis = get_closing_parenthesis(view.from(s));
+          const char* closing_parenthesis =
+              get_closing_parenthesis(view.from(s));
           if (!closing_parenthesis) {
             // Bad expression
             --level;

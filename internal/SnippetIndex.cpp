@@ -197,7 +197,7 @@ void build_map(const TrieNode& node, const std::string& base_string, Map& map) {
     auto* next_node = node.transitions_[i];
     if (next_node) {
       std::string next_string(base_string);
-      next_string += (char)i;
+      next_string += static_cast<char>(i);
       build_map(*next_node, next_string, map);
     }
   }

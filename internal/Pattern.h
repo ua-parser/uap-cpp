@@ -14,9 +14,9 @@ class Match;
 class Pattern {
  public:
   Pattern();
-  Pattern(const std::string&, bool caseSensitive = true);
+  Pattern(const std::string&, bool case_sensitive = true);
 
-  void assign(const std::string&, bool caseSensitive = true);
+  void assign(const std::string&, bool case_sensitive = true);
 
   bool match(const std::string&, Match&) const;
 

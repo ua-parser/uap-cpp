@@ -6,26 +6,26 @@ namespace uap_cpp {
 
 ReplaceTemplate::ReplaceTemplate() : approximateSize_(0) {}
 
-ReplaceTemplate::ReplaceTemplate(const std::string& replaceTemplate) {
-  const char* start = replaceTemplate.c_str();
-  const char* chunkStart = start;
+ReplaceTemplate::ReplaceTemplate(const std::string& replace_template) {
+  const char* start = replace_template.c_str();
+  const char* chunk_start = start;
   const char* s = start;
   while (*s) {
     if (s[0] == '$' && '0' <= s[1] && s[1] <= '9') {
       chunks_.push_back(
-          std::string(chunkStart, static_cast<size_t>(s - chunkStart)));
+          std::string(chunk_start, static_cast<size_t>(s - chunk_start)));
       matchIndices_.push_back(static_cast<int>(s[1] - '0'));
 
-      chunkStart = s + 2;
-      s = chunkStart;
+      chunk_start = s + 2;
+      s = chunk_start;
     } else {
       ++s;
     }
   }
   chunks_.push_back(
-      std::string(chunkStart, static_cast<size_t>(s - chunkStart)));
+      std::string(chunk_start, static_cast<size_t>(s - chunk_start)));
 
-  approximateSize_ = replaceTemplate.size() + 15 * (chunks_.size() - 1);
+  approximateSize_ = replace_template.size() + 15 * (chunks_.size() - 1);
 }
 
 bool ReplaceTemplate::empty() const {

@@ -1,10 +1,10 @@
 #include "UaParser.h"
 
+#include "internal/AlternativeExpander.h"
 #include "internal/Pattern.h"
+#include "internal/ReplaceTemplate.h"
 #include "internal/SnippetIndex.h"
 #include "internal/SnippetMapping.h"
-#include "internal/ReplaceTemplate.h"
-#include "internal/AlternativeExpander.h"
 
 #include <cassert>
 #include <cstdlib>
@@ -43,13 +43,12 @@ struct GenericStoreComparator {
 };
 
 void fill_device_store(const YAML::Node& device_parser,
-                       std::vector<std::unique_ptr<DeviceStore>>& deviceStore,
-                       uap_cpp::SnippetIndex& snippetIndex,
+                       std::vector<std::unique_ptr<DeviceStore>>& device_stores,
+                       uap_cpp::SnippetIndex& snippet_index,
                        uap_cpp::SnippetMapping<const DeviceStore*>& mappings) {
-
-  deviceStore.emplace_back(std::make_unique<DeviceStore>());
-  DeviceStore& device = *deviceStore.back();
-  device.index = deviceStore.size();
+  device_stores.emplace_back(std::make_unique<DeviceStore>());
+  DeviceStore& device = *device_stores.back();
+  device.index = device_stores.size();
 
   std::string regex;
   bool regex_flag = false;
@@ -74,7 +73,7 @@ void fill_device_store(const YAML::Node& device_parser,
   device.regExpr.assign(regex, !regex_flag);
 
   for (const auto& e : uap_cpp::AlternativeExpander::expand(regex)) {
-    auto snippets = snippetIndex.registerSnippets(e);
+    auto snippets = snippet_index.registerSnippets(e);
     mappings.addMapping(snippets, &device);
   }
 }
@@ -84,13 +83,12 @@ void fill_agent_store(const YAML::Node& node,
                       const std::string& major_repl,
                       const std::string& minor_repl,
                       const std::string& patch_repl,
-                      std::vector<std::unique_ptr<AgentStore>>& agentStore,
-                      uap_cpp::SnippetIndex& snippetIndex,
+                      std::vector<std::unique_ptr<AgentStore>>& agent_stores,
+                      uap_cpp::SnippetIndex& snippet_index,
                       uap_cpp::SnippetMapping<const AgentStore*>& mapping) {
-
-  agentStore.emplace_back(std::make_unique<AgentStore>());
-  AgentStore& agent_store = *agentStore.back();
-  agent_store.index = agentStore.size();
+  agent_stores.emplace_back(std::make_unique<AgentStore>());
+  AgentStore& agent_store = *agent_stores.back();
+  agent_store.index = agent_stores.size();
 
   assert(node.Type() == YAML::NodeType::Map);
   for (auto it = node.begin(); it != node.end(); ++it) {
@@ -100,7 +98,7 @@ void fill_agent_store(const YAML::Node& node,
       agent_store.regExpr.assign(value);
 
       for (const auto& e : uap_cpp::AlternativeExpander::expand(value)) {
-        auto snippets = snippetIndex.registerSnippets(e);
+        auto snippets = snippet_index.registerSnippets(e);
         mapping.addMapping(snippets, &agent_store);
       }
     } else if (key == repl) {
@@ -153,7 +151,8 @@ struct UAStore {
 
     const auto& device_parsers = regexes["device_parsers"];
     for (const auto& device_parser : device_parsers) {
-      fill_device_store(device_parser, deviceStore, deviceSnippetIndex, deviceMapping);
+      fill_device_store(
+          device_parser, deviceStore, deviceSnippetIndex, deviceMapping);
     }
   }
 
@@ -344,13 +343,13 @@ DeviceType UserAgentParser::device_type(const std::string& ua) noexcept {
       "Accelerated|(hpw|web)OS|Fennec|Minimo|Opera "
       "M(obi|ini)|Blazer|Dolfin|Dolphin|Skyfire|Zune");
   static const uap_cpp::Pattern rx_tabl(
-      "(tablet|ipad|playbook|silk)|(android.*)",
-      false);
+      "(tablet|ipad|playbook|silk)|(android.*)", false);
   thread_local uap_cpp::Match m;
   try {
     if (rx_tabl.match(ua, m)) {
       return DeviceType::kTablet;
-    } else if (rx_mob.match(ua, m) && m.get(2).find("mobile") == std::string::npos) {
+    } else if (rx_mob.match(ua, m) &&
+               m.get(2).find("mobile") == std::string::npos) {
       return DeviceType::kMobile;
     }
     return DeviceType::kDesktop;

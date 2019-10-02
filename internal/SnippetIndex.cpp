@@ -6,11 +6,11 @@ namespace uap_cpp {
 
 namespace {
 
-inline bool isSnippetChar(char c, bool prevWasBackslash) {
+inline bool is_snippet_char(char c, bool prev_was_backslash) {
   if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') ||
       ('0' <= c && c <= '9')) {
     // Letters and digits are snippet characters, unless preceded by backslash
-    return !prevWasBackslash;
+    return !prev_was_backslash;
   }
   switch (c) {
     case ' ':
@@ -25,23 +25,23 @@ inline bool isSnippetChar(char c, bool prevWasBackslash) {
       return true;
     default:
       // Other characters are snippet characters if preceded by backslash
-      return prevWasBackslash;
+      return prev_was_backslash;
   }
 }
 
-inline bool possiblySkipBlock(const char*& s, const StringView& view) {
+inline bool possibly_skip_block(const char*& s, const StringView& view) {
   if (*s == '(' || *s == '[' || *s == '{') {
-    bool hadAlternativeOperators = false;
-    const char* closingParenthesis =
-        getClosingParenthesis(view.from(s), &hadAlternativeOperators);
-    if (closingParenthesis) {
-      if (*s == '{' || hadAlternativeOperators ||
+    bool had_alternative_operators = false;
+    const char* closing_parenthesis =
+        get_closing_parenthesis(view.from(s), &had_alternative_operators);
+    if (closing_parenthesis) {
+      if (*s == '{' || had_alternative_operators ||
           (*s == '(' &&
-           isOptionalOperator(view.from(closingParenthesis + 1)))) {
+           is_optional_operator(view.from(closing_parenthesis + 1)))) {
         // Always skip count blocks  {1,2}
         // Skip block with alteratives  (ab|ba) or [ab]
         // Skip optional block  (a)? (b)* (a){0,}
-        s = closingParenthesis;
+        s = closing_parenthesis;
         return true;
       }
     }
@@ -49,13 +49,13 @@ inline bool possiblySkipBlock(const char*& s, const StringView& view) {
   return false;
 }
 
-bool hasRootLevelAlternatives(const StringView& view) {
+bool has_root_level_alternatives(const StringView& view) {
   const char* s = view.start();
 
-  bool prevWasBackslash = false;
+  bool prev_was_backslash = false;
   int level = 0;
   while (!view.isEnd(s)) {
-    if (!prevWasBackslash) {
+    if (!prev_was_backslash) {
       if (*s == '(') {
         ++level;
       } else if (*s == ')') {
@@ -64,22 +64,22 @@ bool hasRootLevelAlternatives(const StringView& view) {
         return true;
       } else if (*s == '[') {
         // Must ignore character-level alternatives  [a(b|c]
-        const char* closingParenthesis = getClosingParenthesis(view.from(s));
-        if (closingParenthesis) {
-          s = closingParenthesis;
+        const char* closing_parenthesis = get_closing_parenthesis(view.from(s));
+        if (closing_parenthesis) {
+          s = closing_parenthesis;
         }
       }
     }
-    prevWasBackslash = *s == '\\' && !prevWasBackslash;
+    prev_was_backslash = *s == '\\' && !prev_was_backslash;
     ++s;
   }
   return false;
 }
 
-inline uint8_t toByte(char c, bool toLowercase = true) {
+inline uint8_t to_byte(char c, bool to_lowercase = true) {
   uint8_t b = c;
   // TODO: Duplicate nodes instead of having case-insensitive expressions?
-  if (toLowercase && ('A' <= c && c <= 'Z')) {
+  if (to_lowercase && ('A' <= c && c <= 'Z')) {
     b |= 0x20;
   }
   return b;
@@ -91,55 +91,55 @@ SnippetIndex::SnippetSet SnippetIndex::registerSnippets(
     const StringView& expression) {
   SnippetSet out;
 
-  if (hasRootLevelAlternatives(expression)) {
+  if (has_root_level_alternatives(expression)) {
     // Skip whole expression if alternatives on root level  a|b
     return out;
   }
 
   const char* s = expression.start();
-  const char* snippetStart = nullptr;
+  const char* snippet_start = nullptr;
   TrieNode* node = nullptr;
 
-  bool prevWasBackslash = false;
+  bool prev_was_backslash = false;
   while (!expression.isEnd(s)) {
-    if (isSnippetChar(*s, prevWasBackslash)) {
+    if (is_snippet_char(*s, prev_was_backslash)) {
       if (!node) {
-        snippetStart = s;
+        snippet_start = s;
         node = &trieRootNode_;
       }
 
-      TrieNode*& nextNode = node->transitions_[toByte(*s)];
-      if (!nextNode) {
-        nextNode = new TrieNode;
-        nextNode->parent_ = node;
+      TrieNode*& next_node = node->transitions_[to_byte(*s)];
+      if (!next_node) {
+        next_node = new TrieNode;
+        next_node->parent_ = node;
       }
-      node = nextNode;
+      node = next_node;
     } else {
       if (node) {
-        const char* snippetEnd = s;
-        if (isOptionalOperator(expression.from(snippetEnd))) {
+        const char* snippet_end = s;
+        if (is_optional_operator(expression.from(snippet_end))) {
           // Do not include optional characters  a? a*
-          --snippetEnd;
+          --snippet_end;
           node = node->parent_;
         }
 
-        registerSnippet(snippetStart, snippetEnd, node, out);
+        registerSnippet(snippet_start, snippet_end, node, out);
 
-        snippetStart = nullptr;
+        snippet_start = nullptr;
         node = nullptr;
       }
     }
 
-    if (!prevWasBackslash) {
-      possiblySkipBlock(s, expression);
+    if (!prev_was_backslash) {
+      possibly_skip_block(s, expression);
     }
 
-    prevWasBackslash = *s == '\\' && !prevWasBackslash;
+    prev_was_backslash = *s == '\\' && !prev_was_backslash;
     ++s;
   }
 
   if (node) {
-    registerSnippet(snippetStart, s, node, out);
+    registerSnippet(snippet_start, s, node, out);
   }
 
   return out;
@@ -174,7 +174,7 @@ SnippetIndex::SnippetSet SnippetIndex::getSnippets(
     while (node && !text.isEnd(s2)) {
       // Every character can be the start of a snippet (actually, only snippet
       // characters, but unconditionally looking it up in the array is faster)
-      node = node->transitions_[toByte(*s2)];
+      node = node->transitions_[to_byte(*s2)];
       if (node && node->snippetId_) {
         out.insert(node->snippetId_);
       }
@@ -188,17 +188,17 @@ SnippetIndex::SnippetSet SnippetIndex::getSnippets(
 
 namespace {
 template <class TrieNode, class Map>
-void buildMap(const TrieNode& node, const std::string& baseString, Map& map) {
+void build_map(const TrieNode& node, const std::string& base_string, Map& map) {
   if (node.snippetId_) {
-    map.insert(std::make_pair(node.snippetId_, baseString));
+    map.insert(std::make_pair(node.snippetId_, base_string));
   }
 
   for (int i = 0; i < 256; i++) {
-    auto* nextNode = node.transitions_[i];
-    if (nextNode) {
-      std::string nextString(baseString);
-      nextString += (char)i;
-      buildMap(*nextNode, nextString, map);
+    auto* next_node = node.transitions_[i];
+    if (next_node) {
+      std::string next_string(base_string);
+      next_string += (char)i;
+      build_map(*next_node, next_string, map);
     }
   }
 }
@@ -207,7 +207,7 @@ void buildMap(const TrieNode& node, const std::string& baseString, Map& map) {
 std::map<SnippetIndex::SnippetId, std::string>
 SnippetIndex::getRegisteredSnippets() const {
   std::map<SnippetId, std::string> map;
-  buildMap(trieRootNode_, "", map);
+  build_map(trieRootNode_, "", map);
   return map;
 }
 

@@ -4,19 +4,19 @@ namespace uap_cpp {
 
 Pattern::Pattern() : groupCount_(0) {}
 
-Pattern::Pattern(const std::string& pattern, bool caseSensitive)
+Pattern::Pattern(const std::string& pattern, bool case_sensitive)
     : groupCount_(0) {
-  assign(pattern, caseSensitive);
+  assign(pattern, case_sensitive);
 }
 
-void Pattern::assign(const std::string& pattern, bool caseSensitive) {
+void Pattern::assign(const std::string& pattern, bool case_sensitive) {
   // Add parentheses around expression for capture group 0
-  std::string patternWithZeroGroup = "(" + pattern + ")";
+  std::string pattern_with_zero_group = "(" + pattern + ")";
 
   re2::RE2::Options options;
-  options.set_case_sensitive(caseSensitive);
+  options.set_case_sensitive(case_sensitive);
 
-  regex_ = std::make_unique<re2::RE2>(patternWithZeroGroup, options);
+  regex_ = std::make_unique<re2::RE2>(pattern_with_zero_group, options);
 
   groupCount_ = regex_->NumberOfCapturingGroups();
   if (groupCount_ > Match::MAX_MATCHES) {
@@ -45,12 +45,12 @@ int Match::size() const {
 }
 
 namespace {
-std::string emptyString;
+std::string empty_string;
 }
 
 const std::string& Match::get(int index) const {
   if (index > count_) {
-    return emptyString;
+    return empty_string;
   }
   return strings_[index];
 }

@@ -224,19 +224,19 @@ TEST(DeviceFamily, test_device_mt) {
 }
 #endif  // WITH_MT_TEST
 
-void test_snippets(const std::string& expression, std::vector<std::string> shouldMatch) {
+void test_snippets(const std::string& expression, std::vector<std::string> should_match) {
   uap_cpp::SnippetIndex index;
-  auto snippetSet = index.registerSnippets(expression);
-  auto snippetStringMap = index.getRegisteredSnippets();
+  auto snippet_set = index.registerSnippets(expression);
+  auto snippet_string_map = index.getRegisteredSnippets();
 
-  std::vector<std::string> snippetStrings;
-  for (auto snippetId : snippetSet) {
-    auto it = snippetStringMap.find(snippetId);
-    ASSERT_NE(it, snippetStringMap.end());
-    snippetStrings.emplace_back(it->second);
+  std::vector<std::string> snippet_strings;
+  for (auto snippetId : snippet_set) {
+    auto it = snippet_string_map.find(snippetId);
+    ASSERT_NE(it, snippet_string_map.end());
+    snippet_strings.emplace_back(it->second);
   }
 
-  EXPECT_EQ(snippetStrings, shouldMatch);
+  EXPECT_EQ(snippet_strings, should_match);
 }
 
 TEST(SnippetIndex, snippets) {
@@ -268,8 +268,8 @@ TEST(SnippetIndex, snippets) {
 }
 
 void test_expand(const std::string& expression,
-                 std::vector<std::string> shouldMatch) {
-  EXPECT_EQ(uap_cpp::AlternativeExpander::expand(expression), shouldMatch);
+                 std::vector<std::string> should_match) {
+  EXPECT_EQ(uap_cpp::AlternativeExpander::expand(expression), should_match);
 }
 
 TEST(AlternativeExpander, expansions) {
@@ -302,12 +302,12 @@ TEST(AlternativeExpander, expansions) {
 }
 
 std::string match_and_expand(const std::string& expression,
-                             const std::string& inputString,
-                             const std::string& replaceTemplate) {
+                             const std::string& input_string,
+                             const std::string& replace_template) {
   uap_cpp::Pattern p(expression);
   uap_cpp::Match m;
-  if (p.match(inputString, m)) {
-    return uap_cpp::ReplaceTemplate(replaceTemplate).expand(m);
+  if (p.match(input_string, m)) {
+    return uap_cpp::ReplaceTemplate(replace_template).expand(m);
   }
   return "";
 }

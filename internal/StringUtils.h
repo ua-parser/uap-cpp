@@ -2,63 +2,63 @@
 
 namespace {
 
-const char* getClosingParenthesis(const uap_cpp::StringView& view,
-                                  bool* hadAlternativeOperators = nullptr) {
-  if (hadAlternativeOperators) {
-    *hadAlternativeOperators = false;
+const char* get_closing_parenthesis(const uap_cpp::StringView& view,
+                                    bool* had_alternative_operators = nullptr) {
+  if (had_alternative_operators) {
+    *had_alternative_operators = false;
   }
 
   const char* s = view.start();
 
-  char startChar = *s;
-  char endChar;
+  char start_char = *s;
+  char end_char;
 
-  bool mayBeNested;
+  bool may_be_nested;
   int level = 0;
-  switch (startChar) {
+  switch (start_char) {
   case '(':
-    endChar = ')';
-    mayBeNested = true;
+    end_char = ')';
+    may_be_nested = true;
     break;
   case '[':
-    endChar = ']';
-    mayBeNested = false;
+    end_char = ']';
+    may_be_nested = false;
     break;
   case '{':
-    endChar = '}';
-    mayBeNested = false;
+    end_char = '}';
+    may_be_nested = false;
     break;
   default:
     return nullptr;
   }
   ++s;
 
-  if (mayBeNested) {
+  if (may_be_nested) {
     ++level;
   }
 
   while (!view.isEnd(s)) {
     if (*s == '\\') {
       ++s;
-    } else if (*s == endChar) {
-      if (mayBeNested) {
+    } else if (*s == end_char) {
+      if (may_be_nested) {
         --level;
       }
       if (level == 0) {
-        if (startChar == '[' && hadAlternativeOperators) {
-          *hadAlternativeOperators = true;
+        if (start_char == '[' && had_alternative_operators) {
+          *had_alternative_operators = true;
         }
-        if (!(startChar == '[' && s - view.start() == 1)) {
+        if (!(start_char == '[' && s - view.start() == 1)) {
           return s;
         }
       }
-    } else if (*s == startChar) {
-      if (mayBeNested) {
+    } else if (*s == start_char) {
+      if (may_be_nested) {
         ++level;
       }
-    } else if (startChar == '(' && *s == '|' && level == 1) {
-      if (hadAlternativeOperators) {
-        *hadAlternativeOperators = true;
+    } else if (start_char == '(' && *s == '|' && level == 1) {
+      if (had_alternative_operators) {
+        *had_alternative_operators = true;
       }
     }
     ++s;
@@ -66,7 +66,7 @@ const char* getClosingParenthesis(const uap_cpp::StringView& view,
   return nullptr;
 }
 
-inline bool isOptionalOperator(const uap_cpp::StringView& view) {
+inline bool is_optional_operator(const uap_cpp::StringView& view) {
   const char* s = view.start();
   if (view.isEnd(s)) {
     return false;

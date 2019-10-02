@@ -15,7 +15,7 @@ std::vector<std::string> AlternativeExpander::expand(
 
 namespace {
 
-bool isNegativeLookaheadOperator(const StringView& view) {
+bool is_negative_lookahead_operator(const StringView& view) {
   const char* s = view.start();
   if (view.isEnd(s) || view.isEnd(s + 1)) {
     return false;
@@ -23,7 +23,7 @@ bool isNegativeLookaheadOperator(const StringView& view) {
   return s[0] == '?' && s[1] == '!';
 }
 
-bool isNonCaptureOperator(const StringView& view) {
+bool is_non_capture_operator(const StringView& view) {
   const char* s = view.start();
   if (view.isEnd(s) || view.isEnd(s + 1)) {
     return false;
@@ -41,9 +41,9 @@ void AlternativeExpander::expand(const StringView& view,
   {
     const char* s = view.start();
     int level = 0;
-    bool prevWasBackslash = false;
+    bool prev_was_backslash = false;
     while (!view.isEnd(s)) {
-      if (!prevWasBackslash) {
+      if (!prev_was_backslash) {
         if (*s == '(') {
           ++level;
         } else if (*s == ')') {
@@ -51,10 +51,10 @@ void AlternativeExpander::expand(const StringView& view,
             --level;
           }
         } else if (*s == '[') {
-          const char* closingParenthesis = getClosingParenthesis(view.from(s));
-          if (closingParenthesis) {
+          const char* closing_parenthesis = get_closing_parenthesis(view.from(s));
+          if (closing_parenthesis) {
             // Skip character-level alternative block
-            s = closingParenthesis;
+            s = closing_parenthesis;
             continue;
           }
         }
@@ -70,7 +70,7 @@ void AlternativeExpander::expand(const StringView& view,
         }
       }
 
-      prevWasBackslash = *s == '\\' && !prevWasBackslash;
+      prev_was_backslash = *s == '\\' && !prev_was_backslash;
       ++s;
     }
   }
@@ -78,38 +78,38 @@ void AlternativeExpander::expand(const StringView& view,
   // Now go through root-level parentheses
   const char* s = view.start();
   int level = 0;
-  bool prevWasBackslash = false;
+  bool prev_was_backslash = false;
   while (!view.isEnd(s)) {
-    if (!prevWasBackslash) {
+    if (!prev_was_backslash) {
       if (*s == '(') {
         ++level;
         if (level == 1) {
-          const char* closingParenthesis = getClosingParenthesis(view.from(s));
-          if (!closingParenthesis) {
+          const char* closing_parenthesis = get_closing_parenthesis(view.from(s));
+          if (!closing_parenthesis) {
             // Bad expression
             --level;
             ++s;
             continue;
           }
 
-          if (isOptionalOperator(view.from(closingParenthesis + 1)) ||
-              isNegativeLookaheadOperator(view.from(s + 1))) {
+          if (is_optional_operator(view.from(closing_parenthesis + 1)) ||
+              is_negative_lookahead_operator(view.from(s + 1))) {
             // Continue after parentheses
-            s = closingParenthesis;
+            s = closing_parenthesis;
             continue;
           }
 
           // Add ( or (?: to prefix
-          const char* innerStart = s + 1;
-          if (isNonCaptureOperator(view.from(innerStart))) {
-            innerStart += 2;
+          const char* inner_start = s + 1;
+          if (is_non_capture_operator(view.from(inner_start))) {
+            inner_start += 2;
           }
-          prefix.append(view.start(), innerStart - view.start());
+          prefix.append(view.start(), inner_start - view.start());
 
-          next.emplace_back(view.from(closingParenthesis));
+          next.emplace_back(view.from(closing_parenthesis));
 
           // Recursively go through what is enclosed by parentheses
-          expand(StringView(innerStart, closingParenthesis),
+          expand(StringView(inner_start, closing_parenthesis),
                  std::move(prefix),
                  std::move(next),
                  out);
@@ -120,16 +120,16 @@ void AlternativeExpander::expand(const StringView& view,
           --level;
         }
       } else if (*s == '[') {
-        const char* closingParenthesis = getClosingParenthesis(view.from(s));
-        if (closingParenthesis) {
+        const char* closing_parenthesis = get_closing_parenthesis(view.from(s));
+        if (closing_parenthesis) {
           // Skip character-level alternative block
-          s = closingParenthesis;
+          s = closing_parenthesis;
           continue;
         }
       }
     }
 
-    prevWasBackslash = *s == '\\' && !prevWasBackslash;
+    prev_was_backslash = *s == '\\' && !prev_was_backslash;
     ++s;
   }
 
@@ -141,10 +141,10 @@ void AlternativeExpander::expand(const StringView& view,
     out.emplace_back(std::move(prefix));
   } else {
     // Pop the stack and continue with rest of string
-    StringView nextView = next.back();
+    StringView next_view = next.back();
     next.pop_back();
 
-    expand(nextView, std::move(prefix), std::move(next), out);
+    expand(next_view, std::move(prefix), std::move(next), out);
   }
 }
 

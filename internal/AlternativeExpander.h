@@ -24,7 +24,7 @@ private:
   typedef std::vector<StringView> Stack;
   static void expand(const StringView&,
                      std::string prefix,
-                     Stack nextStack,
+                     Stack next_stack,
                      std::vector<std::string>&);
 };
 

@@ -22,7 +22,7 @@ class Pattern {
 
  private:
   std::unique_ptr<re2::RE2> regex_;
-  int groupCount_;
+  size_t groupCount_;
 };
 
 /**
@@ -32,8 +32,8 @@ class Match {
  public:
   Match();
 
-  int size() const;
-  const std::string& get(int index) const;
+  size_t size() const;
+  const std::string& get(size_t index) const;
 
  private:
   friend class Pattern;
@@ -41,7 +41,7 @@ class Match {
   std::string strings_[MAX_MATCHES];
   re2::RE2::Arg args_[MAX_MATCHES];
   const re2::RE2::Arg* argPtrs_[MAX_MATCHES];
-  int count_;
+  size_t count_;
 };
 
 }  // namespace uap_cpp

@@ -34,13 +34,13 @@ bool Pattern::match(const std::string& s, Match& m) const {
 }
 
 Match::Match() {
-  for (int i = 0; i < MAX_MATCHES; i++) {
+  for (size_t i = 0; i < MAX_MATCHES; i++) {
     args_[i] = &strings_[i];
     argPtrs_[i] = &args_[i];
   }
 }
 
-int Match::size() const {
+size_t Match::size() const {
   return count_;
 }
 
@@ -48,7 +48,7 @@ namespace {
 std::string empty_string;
 }
 
-const std::string& Match::get(int index) const {
+const std::string& Match::get(size_t index) const {
   if (index > count_) {
     return empty_string;
   }

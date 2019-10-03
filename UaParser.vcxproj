@@ -153,9 +153,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="UaParser.h" />
+    <ClInclude Include="internal\Pattern.h" />
+    <ClInclude Include="internal\AlternativeExpander.h" />
+    <ClInclude Include="internal\SnippetIndex.h" />
+    <ClInclude Include="internal\SnippetMapping.h" />
+    <ClInclude Include="internal\ReplaceTemplate.h" />
+    <ClInclude Include="internal\StringUtils.h" />
+    <ClInclude Include="internal\StringView.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="UaParser.cpp" />
+    <ClCompile Include="internal\Pattern.cpp" />
+    <ClCompile Include="internal\AlternativeExpander.cpp" />
+    <ClCompile Include="internal\SnippetIndex.cpp" />
+    <ClCompile Include="internal\ReplaceTemplate.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

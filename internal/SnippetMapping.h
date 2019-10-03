@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -21,11 +22,11 @@ class SnippetMapping {
   void addMapping(const SnippetSet& snippets, const Expression& expression) {
     TrieNode* node = &trieRootNode_;
     for (SnippetId snippet : snippets) {
-      TrieNode*& slot = node->transitions_[snippet];
+      auto& slot = node->transitions_[snippet];
       if (!slot) {
-        slot = new TrieNode;
+        slot = std::make_unique<TrieNode>();
       }
-      node = slot;
+      node = slot.get();
     }
     node->expressions_.insert(expression);
   }
@@ -44,12 +45,7 @@ class SnippetMapping {
 
  private:
   struct TrieNode {
-    ~TrieNode() {
-      for (auto& e : transitions_) {
-        delete e.second;
-      }
-    }
-    std::unordered_map<SnippetId, TrieNode*> transitions_;
+    std::unordered_map<SnippetId, std::unique_ptr<TrieNode>> transitions_;
     std::unordered_set<Expression> expressions_;
   };
   TrieNode trieRootNode_;

@@ -20,12 +20,6 @@ namespace uap_cpp {
 class AlternativeExpander {
 public:
   static std::vector<std::string> expand(const StringView& expression);
-private:
-  typedef std::vector<StringView> Stack;
-  static void expand(const StringView&,
-                     std::string prefix,
-                     Stack next_stack,
-                     std::vector<std::string>&);
 };
 
 }

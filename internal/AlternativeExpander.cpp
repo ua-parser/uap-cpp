@@ -4,15 +4,6 @@
 
 namespace uap_cpp {
 
-std::vector<std::string> AlternativeExpander::expand(
-    const StringView& expression) {
-  std::vector<std::string> out;
-  std::string prefix;
-  Stack next;
-  expand(expression, std::move(prefix), std::move(next), out);
-  return out;
-}
-
 namespace {
 
 bool is_negative_lookahead_operator(const StringView& view) {
@@ -31,52 +22,59 @@ bool is_non_capture_operator(const StringView& view) {
   return s[0] == '?' && s[1] == ':';
 }
 
-}  // namespace
+typedef std::vector<StringView> Stack;
 
-void AlternativeExpander::expand(const StringView& view,
-                                 std::string prefix,
-                                 Stack next,
-                                 std::vector<std::string>& out) {
-  // First go through root-level alternatives
-  {
-    const char* s = view.start();
-    int level = 0;
-    bool prev_was_backslash = false;
-    while (!view.isEnd(s)) {
-      if (!prev_was_backslash) {
-        if (*s == '(') {
-          ++level;
-        } else if (*s == ')') {
-          if (level > 0) {
-            --level;
-          }
-        } else if (*s == '[') {
-          const char* closing_parenthesis =
-              get_closing_parenthesis(view.from(s));
-          if (closing_parenthesis) {
-            // Skip character-level alternative block
-            s = closing_parenthesis;
-            continue;
-          }
+void expand(const StringView&,
+            std::string prefix,
+            Stack next_stack,
+            std::vector<std::string>&);
+
+bool expand_root_level_alternatives(const StringView& view,
+                                    std::string& prefix,
+                                    Stack& next,
+                                    std::vector<std::string>& out) {
+  const char* s = view.start();
+  int level = 0;
+  bool prev_was_backslash = false;
+  while (!view.isEnd(s)) {
+    if (!prev_was_backslash) {
+      if (*s == '(') {
+        ++level;
+      } else if (*s == ')') {
+        if (level > 0) {
+          --level;
         }
-
-        if (level == 0 && *s == '|') {
-          // Go through alternative on the left
-          expand(view.to(s), prefix, next, out);
-
-          // Go through alternative(s) on the right
-          expand(view.from(s + 1), std::move(prefix), std::move(next), out);
-
-          return;
+      } else if (*s == '[') {
+        const char* closing_parenthesis = get_closing_parenthesis(view.from(s));
+        if (closing_parenthesis) {
+          // Skip character-level alternative block
+          s = closing_parenthesis;
+          continue;
         }
       }
 
-      prev_was_backslash = *s == '\\' && !prev_was_backslash;
-      ++s;
+      if (level == 0 && *s == '|') {
+        // Go through alternative on the left
+        expand(view.to(s), prefix, next, out);
+
+        // Go through alternative(s) on the right
+        expand(view.from(s + 1), std::move(prefix), std::move(next), out);
+
+        return true;
+      }
     }
+
+    prev_was_backslash = *s == '\\' && !prev_was_backslash;
+    ++s;
   }
 
-  // Now go through root-level parentheses
+  return false;
+}
+
+bool expand_root_level_parentheses(const StringView& view,
+                                   std::string& prefix,
+                                   Stack& next,
+                                   std::vector<std::string>& out) {
   const char* s = view.start();
   int level = 0;
   bool prev_was_backslash = false;
@@ -115,7 +113,7 @@ void AlternativeExpander::expand(const StringView& view,
                  std::move(prefix),
                  std::move(next),
                  out);
-          return;
+          return true;
         }
       } else if (*s == ')') {
         if (level > 0) {
@@ -138,6 +136,23 @@ void AlternativeExpander::expand(const StringView& view,
   // No alternatives or parentheses, so add to to prefix
   prefix.append(view.start(), s - view.start());
 
+  return false;
+}
+
+void expand(const StringView& view,
+            std::string prefix,
+            Stack next,
+            std::vector<std::string>& out) {
+  if (expand_root_level_alternatives(view, prefix, next, out)) {
+    // Root-level alternatives were handled recursively
+    return;
+  }
+
+  if (expand_root_level_parentheses(view, prefix, next, out)) {
+    // Root-level parentheses where handled recursively
+    return;
+  }
+
   if (next.empty()) {
     // Reached end of string, add what has been collected
     out.emplace_back(std::move(prefix));
@@ -148,6 +163,17 @@ void AlternativeExpander::expand(const StringView& view,
 
     expand(next_view, std::move(prefix), std::move(next), out);
   }
+}
+
+}  // namespace
+
+std::vector<std::string> AlternativeExpander::expand(
+    const StringView& expression) {
+  std::vector<std::string> out;
+  std::string prefix;
+  Stack next;
+  uap_cpp::expand(expression, std::move(prefix), std::move(next), out);
+  return out;
 }
 
 }  // namespace uap_cpp

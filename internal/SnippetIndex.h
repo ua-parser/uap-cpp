@@ -2,9 +2,9 @@
 
 #include "StringView.h"
 
-#include <map>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace uap_cpp {
@@ -25,7 +25,7 @@ class SnippetIndex {
   SnippetSet registerSnippets(const StringView& expression);
   SnippetSet getSnippets(const StringView& text) const;
 
-  std::map<SnippetId, std::string> getRegisteredSnippets() const;
+  std::unordered_map<SnippetId, std::string> getRegisteredSnippets() const;
 
  private:
   struct TrieNode {

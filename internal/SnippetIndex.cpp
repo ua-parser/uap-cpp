@@ -204,9 +204,9 @@ void build_map(const TrieNode& node, const std::string& base_string, Map& map) {
 }
 }  // namespace
 
-std::map<SnippetIndex::SnippetId, std::string>
+std::unordered_map<SnippetIndex::SnippetId, std::string>
 SnippetIndex::getRegisteredSnippets() const {
-  std::map<SnippetId, std::string> map;
+  std::unordered_map<SnippetId, std::string> map;
   build_map(trieRootNode_, "", map);
   return map;
 }

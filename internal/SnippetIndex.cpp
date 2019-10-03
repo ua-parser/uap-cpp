@@ -167,20 +167,20 @@ SnippetIndex::SnippetSet SnippetIndex::getSnippets(
     const StringView& text) const {
   SnippetSet out;
 
-  const char* s = text.start();
-  while (!text.isEnd(s)) {
-    const char* s2 = s;
+  const char* snippet_start = text.start();
+  while (!text.isEnd(snippet_start)) {
+    const char* snippet_end = snippet_start;
     const TrieNode* node = &trieRootNode_;
-    while (node && !text.isEnd(s2)) {
+    while (node && !text.isEnd(snippet_end)) {
       // Every character can be the start of a snippet (actually, only snippet
       // characters, but unconditionally looking it up in the array is faster)
-      node = node->transitions_[to_byte(*s2)];
+      node = node->transitions_[to_byte(*snippet_end)];
       if (node && node->snippetId_) {
         out.insert(node->snippetId_);
       }
-      ++s2;
+      ++snippet_end;
     }
-    ++s;
+    ++snippet_start;
   }
 
   return out;

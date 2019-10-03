@@ -77,4 +77,40 @@ inline bool is_optional_operator(const uap_cpp::StringView& view) {
   return *s == '*' || *s == '?';
 }
 
+inline bool is_whitespace(char ch) {
+  return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
+}
+
+template <class String>
+void trim(String& s) {
+  size_t trim_left = 0;
+  for (auto it = s.begin(); it != s.end(); ++it) {
+    if (!is_whitespace(*it)) {
+      break;
+    }
+    ++trim_left;
+  }
+
+  if (trim_left == s.size()) {
+    s.clear();
+  } else {
+    size_t trim_right = 0;
+    for (auto it = s.rbegin(); it != s.rend(); ++it) {
+      if (!is_whitespace(*it)) {
+        break;
+      }
+      ++trim_right;
+    }
+
+    if (trim_left > 0 || trim_right > 0) {
+      if (trim_left == 0) {
+        s.resize(s.size() - trim_right);
+      } else {
+        String copy(s.c_str() + trim_left, s.size() - trim_left - trim_right);
+        s.swap(copy);
+      }
+    }
+  }
+}
+
 }  // namespace

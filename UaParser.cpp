@@ -5,6 +5,7 @@
 #include "internal/ReplaceTemplate.h"
 #include "internal/SnippetIndex.h"
 #include "internal/SnippetMapping.h"
+#include "internal/StringUtils.h"
 
 #include <cassert>
 #include <cstdlib>
@@ -14,7 +15,6 @@
 #include <vector>
 
 #include <yaml-cpp/yaml.h>
-#include <boost/algorithm/string.hpp>
 
 namespace {
 
@@ -193,11 +193,11 @@ uap_cpp::Device parse_device_impl(const std::string& ua,
       } else {
         device.family = d.replacement.expand(m);
       }
-      boost::algorithm::trim(device.family);
+      trim(device.family);
 
       if (!d.brandReplacement.empty()) {
         device.brand = d.brandReplacement.expand(m);
-        boost::algorithm::trim(device.brand);
+        trim(device.brand);
       }
 
       if (d.modelReplacement.empty() && m.size() > 1) {
@@ -205,7 +205,7 @@ uap_cpp::Device parse_device_impl(const std::string& ua,
       } else {
         device.model = d.modelReplacement.expand(m);
       }
-      boost::algorithm::trim(device.model);
+      trim(device.model);
 
       break;
     }
@@ -223,7 +223,7 @@ void fill_agent(AGENT& agent,
   } else {
     agent.family = store.replacement.expand(m);
   }
-  boost::algorithm::trim(agent.family);
+  trim(agent.family);
 
   if (!store.majorVersionReplacement.empty()) {
     agent.major = store.majorVersionReplacement.expand(m);

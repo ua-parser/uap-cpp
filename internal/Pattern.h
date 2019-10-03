@@ -37,7 +37,7 @@ class Match {
 
  private:
   friend class Pattern;
-  enum { MAX_MATCHES = 10 };
+  static constexpr size_t MAX_MATCHES = 10;
   std::string strings_[MAX_MATCHES];
   re2::RE2::Arg args_[MAX_MATCHES];
   const re2::RE2::Arg* argPtrs_[MAX_MATCHES];

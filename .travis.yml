@@ -1,7 +1,7 @@
 language: cpp
 before_install:
 - sudo apt-get update -qq
-- sudo apt-get install -qq libboost-regex-dev libyaml-cpp-dev cmake libgtest-dev
+- sudo apt-get install -qq libyaml-cpp-dev cmake libgtest-dev libre2-dev
 - cd /usr/src/gtest
 - sudo cmake CMakeLists.txt
 - sudo make

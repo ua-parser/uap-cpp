@@ -1,6 +1,10 @@
 #include <gtest/gtest.h>
 #include <yaml-cpp/yaml.h>
 #include "UaParser.h"
+#include "internal/AlternativeExpander.h"
+#include "internal/Pattern.h"
+#include "internal/SnippetIndex.h"
+#include "internal/ReplaceTemplate.h"
 #ifdef WITH_MT_TEST
 #include <future>
 #endif  // WITH_MT_TEST
@@ -220,6 +224,101 @@ TEST(DeviceFamily, test_device_mt) {
 }
 #endif  // WITH_MT_TEST
 
+void test_snippets(const std::string& expression, std::vector<std::string> should_match) {
+  uap_cpp::SnippetIndex index;
+  auto snippet_set = index.registerSnippets(expression);
+  auto snippet_string_map = index.getRegisteredSnippets();
+
+  std::vector<std::string> snippet_strings;
+  for (auto snippetId : snippet_set) {
+    auto it = snippet_string_map.find(snippetId);
+    ASSERT_NE(it, snippet_string_map.end());
+    snippet_strings.emplace_back(it->second);
+  }
+
+  EXPECT_EQ(snippet_strings, should_match);
+}
+
+TEST(SnippetIndex, snippets) {
+  test_snippets("foo.bar", {"foo", "bar"});
+  test_snippets("foodbar", {"foodbar"});
+  test_snippets("food?bar", {"foo", "bar"});
+  test_snippets("foo.?bar", {"foo", "bar"});
+  test_snippets("foo\\.bar", {"foo", ".bar"});
+  test_snippets("(foo)", {"foo"});
+  test_snippets("toto(foo|bar)tata", {"toto", "tata"});
+  test_snippets("toto(foo)tata", {"toto", "foo", "tata"});
+  test_snippets("toto(foo)?tata", {"toto", "tata"});
+  test_snippets("toto(foo)*tata", {"toto", "tata"});
+  test_snippets("toto(foo){0,10}tata", {"toto", "tata"});
+  test_snippets("toto(foo){0,}tata", {"toto", "tata"});
+  test_snippets("toto(foo){1,10}tata", {"toto", "foo", "tata"});
+  test_snippets("toto(foo){1,}tata", {"toto", "foo", "tata"});
+  test_snippets("foo[abc]bar", {"foo", "bar"});
+  test_snippets("foo[abc]+bar", {"foo", "bar"});
+  test_snippets("foo|bar", {});
+  test_snippets("foo[|]bar", {"foo", "bar"});
+  test_snippets("[(foo)]bar", {"bar"});
+  test_snippets("[]foo]bar", {"bar"});
+  test_snippets("(foo[abc)])bar", {"foo", "bar"});
+  test_snippets("(foo(abc))bar", {"foo", "abc", "bar"});
+  test_snippets("Foo.bAR", {"foo", "bar"});
+  test_snippets("/(\\d+)\\.?foo(\\d+)", {"foo"});
+  test_snippets("(?:foo|bar);.*(baz)/(\\d+)\\.(\\d+)", {"baz"});
+}
+
+void test_expand(const std::string& expression,
+                 std::vector<std::string> should_match) {
+  EXPECT_EQ(uap_cpp::AlternativeExpander::expand(expression), should_match);
+}
+
+TEST(AlternativeExpander, expansions) {
+  test_expand("a", {"a"});
+  test_expand("(a)", {"(a)"});
+  test_expand("(a|b)", {"(a)", "(b)"});
+  test_expand("(?:a|b)", {"(?:a)", "(?:b)"});
+  test_expand("(a|b)?", {"(a|b)?"});
+  test_expand("(a|b)+", {"(a)+", "(b)+"});
+  test_expand("(a|b)*", {"(a|b)*"});
+  test_expand("(a|b){0,2}", {"(a|b){0,2}"});
+  test_expand("a|b", {"a", "b"});
+  test_expand("x(a|b)y", {"x(a)y", "x(b)y"});
+  test_expand("(a|b)yz", {"(a)yz", "(b)yz"});
+  test_expand("xa|by", {"xa", "by"});
+  test_expand("(a|b)(c|d)", {"(a)(c)", "(a)(d)", "(b)(c)", "(b)(d)"});
+  test_expand("(a(b|c)|d)", {"(a(b))", "(a(c))", "(d)"});
+  test_expand("(a", {"(a"});
+  test_expand("(a|b", {"(a|b"});
+  test_expand("((a", {"((a"});
+  test_expand("((a|b", {"((a|b"});
+  test_expand("(a((a|b", {"(a((a|b"});
+  test_expand("[ab]", {"[ab]"});
+  test_expand("[(|)]", {"[(|)]"});
+  test_expand("[(a|a)]", {"[(a|a)]"});
+  test_expand("a(|)b", {"a()b", "a()b"});
+  test_expand("([ab]|[bc])", {"([ab])", "([bc])"});
+  test_expand("[[](a|b)", {"[[](a)", "[[](b)"});
+  test_expand("[]abc](a|b)", {"[]abc](a)", "[]abc](b)"});
+}
+
+std::string match_and_expand(const std::string& expression,
+                             const std::string& input_string,
+                             const std::string& replace_template) {
+  uap_cpp::Pattern p(expression);
+  uap_cpp::Match m;
+  if (p.match(input_string, m)) {
+    return uap_cpp::ReplaceTemplate(replace_template).expand(m);
+  }
+  return "";
+}
+
+TEST(ReplaceTemplate, expansions) {
+  EXPECT_EQ(match_and_expand("something", "other", "foo"), "");
+  EXPECT_EQ(match_and_expand("something", "something", "foo"), "foo");
+  EXPECT_EQ(match_and_expand("some(thing)", "something", "no$1"), "nothing");
+  EXPECT_EQ(match_and_expand("so([Mm])eth(ing)", "that's something!", "$1$2$3"), "ming");
+  EXPECT_EQ(match_and_expand("([^ ]+) (.+)", "a b", "$2-$1"), "b-a");
+}
 }  // namespace
 
 int main(int argc, char** argv) {

@@ -1,23 +1,31 @@
-LDFLAGS += -lboost_regex -lyaml-cpp
-CXXFLAGS += -std=c++0x -Wall -Werror -g -fPIC -O3
+ifndef KEEP_ENV_VARS
+LDFLAGS += -lre2 -lyaml-cpp
+CXXFLAGS += -std=c++14 -Wall -Werror -g -fPIC -O3
+endif
 
 # wildcard object build target
 %.o: %.cpp
-	$(CXX) -c $(CXXFLAGS) $*.cpp -o $*.o
-	@$(CXX) -MM $(CXXFLAGS) $*.cpp > $*.d
+	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $*.cpp -o $*.o
+	@$(CXX) -MM $(CPPFLAGS) $(CXXFLAGS) $*.cpp > $*.d
 
 uaparser_cpp: libuaparser_cpp.a
 
-libuaparser_cpp.a: UaParser.o
+OBJECT_FILES = UaParser.o \
+	internal/Pattern.o \
+	internal/AlternativeExpander.o \
+	internal/SnippetIndex.o \
+	internal/ReplaceTemplate.o
+
+libuaparser_cpp.a: $(OBJECT_FILES)
 	ar rcs $@ $^
 
-libuaparser_cpp.so: UaParser.o
+libuaparser_cpp.so: $(OBJECT_FILES)
 	$(CXX) $< -shared $(LDFLAGS) -o $@
 
 UaParserTest: libuaparser_cpp.a UaParserTest.o
 	$(CXX) $^ -o $@ libuaparser_cpp.a $(LDFLAGS) -lgtest -lpthread
 
-test: UaParserTest libuaparser_cpp.so
+test: UaParserTest libuaparser_cpp.a
 	./UaParserTest
 
 # clean everything generated

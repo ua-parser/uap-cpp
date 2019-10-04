@@ -33,7 +33,7 @@ The MSVC projects assume boost to be installed at: ``C:\boost_1_69_0`` and yaml 
 Dependencies
 ------------
 
-* boost_regex, yaml-cpp (0.5 API)
+* re2, yaml-cpp (0.5 API)
 * gtest (for testing)
 * [uap-core](https://github.com/ua-parser/uap-core), same directory level as uap-cpp. You can clone this repo with --recurse-submodules to get it. Alternatively, run `git submodule update --init`.
 

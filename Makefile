@@ -28,11 +28,17 @@ UaParserTest: libuaparser_cpp.a UaParserTest.o
 test: UaParserTest libuaparser_cpp.a
 	./UaParserTest
 
+UaParserBench: libuaparser_cpp.a benchmarks/UaParserBench.o
+	$(CXX) $^ -o $@ libuaparser_cpp.a $(LDFLAGS) -lpthread
+
+bench: UaParserBench
+	time ./UaParserBench uap-core/regexes.yaml benchmarks/useragents.txt 1000
+
 # clean everything generated
 clean:
 	find . -name "*.o" -exec rm -rf {} \; # clean up object files
 	find . -name "*.d" -exec rm -rf {} \; # clean up dependencies
-	rm -f UaParserTest *.a *.so
+	rm -f UaParserTest UaParserBench *.a *.so
 
 # automatically include the generated *.d dependency make targets
 # that are created from the wildcard %.o build target above

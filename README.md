@@ -42,9 +42,7 @@ Contributing
 
 Pull requests are welcome. Use `clang-format -i *.cpp *.h` to format the sources before sending the patch.
 
-Author
-------
+Credits
+-------
 
-Alex Şuhan <alex.suhan@gmail.com>
-
-Based on the D implementation by Shripad K and using agent data from BrowserScope.
+Inspired from the D implementation by Shripad K and using agent data from BrowserScope.

@@ -1,10 +1,11 @@
 #include <gtest/gtest.h>
 #include <yaml-cpp/yaml.h>
+
 #include "UaParser.h"
 #include "internal/AlternativeExpander.h"
 #include "internal/Pattern.h"
-#include "internal/SnippetIndex.h"
 #include "internal/ReplaceTemplate.h"
+#include "internal/SnippetIndex.h"
 #ifdef WITH_MT_TEST
 #include <future>
 #endif  // WITH_MT_TEST
@@ -42,12 +43,17 @@ TEST(UserAgentParser, basic) {
 }
 
 TEST(UserAgentParser, DeviceTypeMobile) {
-  ASSERT_TRUE(uap_cpp::UserAgentParser::device_type(
-                  "Mozilla/5.0 (iPhone; CPU iPhone OS "
-                  "5_1_1 like Mac OS X) AppleWebKit/534.46 "
-                  "(KHTML, like Gecko) Version/5.1 "
+  EXPECT_TRUE(uap_cpp::UserAgentParser::device_type(
+                  "Mozilla/5.0 (iPhone; CPU iPhone OS 5_1_1 like Mac OS X) "
+                  "AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 "
                   "Mobile/9B206 Safari/7534.48.3") ==
               uap_cpp::DeviceType::kMobile);
+  EXPECT_TRUE(
+      uap_cpp::UserAgentParser::device_type(
+          "Mozilla/5.0 (Linux; Android 8.0.0; SAMSUNG SM-J330FN Build/R16NW) "
+          "AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/7.2 "
+          "Chrome/11.1.1111.111 Mobile Safari/537.36") ==
+      uap_cpp::DeviceType::kMobile);
 }
 
 TEST(UserAgentParser, DeviceTypeTablet) {
@@ -224,7 +230,8 @@ TEST(DeviceFamily, test_device_mt) {
 }
 #endif  // WITH_MT_TEST
 
-void test_snippets(const std::string& expression, std::vector<std::string> should_match) {
+void test_snippets(const std::string& expression,
+                   std::vector<std::string> should_match) {
   uap_cpp::SnippetIndex index;
   auto snippet_set = index.registerSnippets(expression);
   auto snippet_string_map = index.getRegisteredSnippets();
@@ -316,7 +323,8 @@ TEST(ReplaceTemplate, expansions) {
   EXPECT_EQ(match_and_expand("something", "other", "foo"), "");
   EXPECT_EQ(match_and_expand("something", "something", "foo"), "foo");
   EXPECT_EQ(match_and_expand("some(thing)", "something", "no$1"), "nothing");
-  EXPECT_EQ(match_and_expand("so([Mm])eth(ing)", "that's something!", "$1$2$3"), "ming");
+  EXPECT_EQ(match_and_expand("so([Mm])eth(ing)", "that's something!", "$1$2$3"),
+            "ming");
   EXPECT_EQ(match_and_expand("([^ ]+) (.+)", "a b", "$2-$1"), "b-a");
 }
 }  // namespace

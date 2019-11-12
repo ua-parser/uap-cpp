@@ -1,11 +1,6 @@
 #include "UaParser.h"
 
-#include "internal/AlternativeExpander.h"
-#include "internal/Pattern.h"
-#include "internal/ReplaceTemplate.h"
-#include "internal/SnippetIndex.h"
-#include "internal/SnippetMapping.h"
-#include "internal/StringUtils.h"
+#include <yaml-cpp/yaml.h>
 
 #include <cassert>
 #include <cstdlib>
@@ -14,7 +9,13 @@
 #include <string>
 #include <vector>
 
-#include <yaml-cpp/yaml.h>
+#include "internal/AlternativeExpander.h"
+#include "internal/MakeUnique.h"
+#include "internal/Pattern.h"
+#include "internal/ReplaceTemplate.h"
+#include "internal/SnippetIndex.h"
+#include "internal/SnippetMapping.h"
+#include "internal/StringUtils.h"
 
 namespace {
 
@@ -46,7 +47,7 @@ void fill_device_store(const YAML::Node& device_parser,
                        std::vector<std::unique_ptr<DeviceStore>>& device_stores,
                        uap_cpp::SnippetIndex& snippet_index,
                        uap_cpp::SnippetMapping<const DeviceStore*>& mappings) {
-  device_stores.emplace_back(std::make_unique<DeviceStore>());
+  device_stores.emplace_back(uap_cpp::make_unique<DeviceStore>());
   DeviceStore& device = *device_stores.back();
   device.index = device_stores.size();
 
@@ -86,7 +87,7 @@ void fill_agent_store(const YAML::Node& node,
                       std::vector<std::unique_ptr<AgentStore>>& agent_stores,
                       uap_cpp::SnippetIndex& snippet_index,
                       uap_cpp::SnippetMapping<const AgentStore*>& mapping) {
-  agent_stores.emplace_back(std::make_unique<AgentStore>());
+  agent_stores.emplace_back(uap_cpp::make_unique<AgentStore>());
   AgentStore& agent_store = *agent_stores.back();
   agent_store.index = agent_stores.size();
 

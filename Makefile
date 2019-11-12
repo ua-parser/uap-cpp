@@ -1,6 +1,6 @@
 ifndef KEEP_ENV_VARS
 LDFLAGS += -lre2 -lyaml-cpp
-CXXFLAGS += -std=c++14 -Wall -Werror -g -fPIC -O3
+CXXFLAGS += -std=c++0x -Wall -Werror -g -fPIC -O3
 endif
 
 # wildcard object build target

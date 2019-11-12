@@ -1,5 +1,7 @@
 #include "Pattern.h"
 
+#include "MakeUnique.h"
+
 namespace uap_cpp {
 
 Pattern::Pattern() : groupCount_(0) {}
@@ -16,7 +18,7 @@ void Pattern::assign(const std::string& pattern, bool case_sensitive) {
   re2::RE2::Options options;
   options.set_case_sensitive(case_sensitive);
 
-  regex_ = std::make_unique<re2::RE2>(pattern_with_zero_group, options);
+  regex_ = uap_cpp::make_unique<re2::RE2>(pattern_with_zero_group, options);
 
   groupCount_ = regex_->NumberOfCapturingGroups();
   if (groupCount_ > Match::MAX_MATCHES) {

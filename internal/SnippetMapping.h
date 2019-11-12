@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "MakeUnique.h"
+
 namespace uap_cpp {
 
 /**
@@ -24,7 +26,7 @@ class SnippetMapping {
     for (SnippetId snippet : snippets) {
       auto& slot = node->transitions_[snippet];
       if (!slot) {
-        slot = std::make_unique<TrieNode>();
+        slot = uap_cpp::make_unique<TrieNode>();
       }
       node = slot.get();
     }

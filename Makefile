@@ -17,7 +17,7 @@ OBJECT_FILES = UaParser.o \
 	internal/ReplaceTemplate.o
 
 libuaparser_cpp.a: $(OBJECT_FILES)
-	ar rcs $@ $^
+	$(AR) rcs $@ $^
 
 libuaparser_cpp.so: $(OBJECT_FILES)
 	$(CXX) $< -shared $(LDFLAGS) -o $@

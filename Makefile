@@ -20,7 +20,7 @@ libuaparser_cpp.a: $(OBJECT_FILES)
 	$(AR) rcs $@ $^
 
 libuaparser_cpp.so: $(OBJECT_FILES)
-	$(CXX) $< -shared $(LDFLAGS) -o $@
+	$(CXX) $^ -shared $(LDFLAGS) -o $@
 
 UaParserTest: libuaparser_cpp.a UaParserTest.o
 	$(CXX) $^ -o $@ libuaparser_cpp.a $(LDFLAGS) -lgtest -lpthread

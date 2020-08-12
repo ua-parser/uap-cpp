@@ -57,11 +57,17 @@ TEST(UserAgentParser, DeviceTypeMobile) {
 }
 
 TEST(UserAgentParser, DeviceTypeTablet) {
-  ASSERT_TRUE(uap_cpp::UserAgentParser::device_type(
+  EXPECT_TRUE(uap_cpp::UserAgentParser::device_type(
                   "Mozilla/5.0 (Linux; U; en-us; KFTT Build/IML74K) "
                   "AppleWebKit/535.19 (KHTML, like Gecko) Silk/2.0 "
                   "Safari/535.19 Silk-Accelerated=false") ==
               uap_cpp::DeviceType::kTablet);
+  EXPECT_TRUE(
+      uap_cpp::UserAgentParser::device_type(
+          "Mozilla/5.0 (Linux; Android 9; SHT-AL09 Build/HUAWEISHT-AL09; wv) "
+          "AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 "
+          "Chrome/79.0.3945.136 Safari/537.36") ==
+      uap_cpp::DeviceType::kTablet);
 }
 
 TEST(UserAgentParser, DeviceTypeDesktop) {

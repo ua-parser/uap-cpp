@@ -344,13 +344,13 @@ DeviceType UserAgentParser::device_type(const std::string& ua) noexcept {
       "Accelerated|(hpw|web)OS|Fennec|Minimo|Opera "
       "M(obi|ini)|Blazer|Dolfin|Dolphin|Skyfire|Zune");
   static const uap_cpp::Pattern rx_tabl(
-      "(tablet|ipad|playbook|silk)|(android?!.*mobile)", false);
+      "(tablet|ipad|playbook|silk)|(android.*)", false);
   thread_local uap_cpp::Match m;
   try {
-    if (rx_tabl.match(ua, m)) {
+    if (rx_tabl.match(ua, m) &&
+        m.get(2).find("Mobile") == std::string::npos) {
       return DeviceType::kTablet;
-    } else if (rx_mob.match(ua, m) &&
-               m.get(2).find("mobile") == std::string::npos) {
+    } else if (rx_mob.match(ua, m)) {
       return DeviceType::kMobile;
     }
     return DeviceType::kDesktop;

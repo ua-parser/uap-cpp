@@ -78,6 +78,16 @@ TEST(UserAgentParser, DeviceTypeDesktop) {
       uap_cpp::DeviceType::kDesktop);
 }
 
+TEST(UserAgentParser, DeviceTypeMobileOrTablet) {
+  const auto test_cases = YAML::LoadFile("./test_device_type_mobile.yaml");
+  for (const auto& test : test_cases) {
+    const auto device_type =
+        uap_cpp::UserAgentParser::device_type(test.as<std::string>());
+    ASSERT_TRUE(device_type == uap_cpp::DeviceType::kMobile ||
+                device_type == uap_cpp::DeviceType::kTablet);
+  }
+}
+
 bool has_field(const YAML::Node& root, const std::string& fname) {
   const auto& yaml_field = root[fname];
   return yaml_field.IsDefined();

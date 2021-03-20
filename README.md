@@ -16,6 +16,43 @@ To build and run the tests:
 
 A recent (GCC >= 4.8 or Clang >= 3.9 both work) C++11 compiler is required.
 
+#### cmake build
+
+##### libraries
+
+cd uap-cpp
+mkdir build
+cd build
+cmake ..
+
+make uap-cpp-static
+
+make uap-cpp-shared
+
+##### tests
+
+Prepare gtest:
+
+apt-get install libgtest-dev
+apt-get install cmake # install cmake
+cd /usr/src/gtest
+cmake CMakeLists.txt
+make
+cp *.a /usr/lib
+
+Run from build directory:
+make tests
+
+Run from uap-cpp directory:
+./build/UaParserTest
+
+##### benchmark
+Run from build directory:
+make bench
+
+Run from uap-cpp directory:
+time ./build/UaParserBench uap-core/regexes.yaml benchmarks/useragents.txt 1000
+
 ### Windows
 
 First, open ``uap-cpp.sln`` with MSVC 15 (Visual Studio 2017).

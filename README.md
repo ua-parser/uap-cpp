@@ -33,7 +33,7 @@ A recent (GCC >= 4.8 or Clang >= 3.9 both work) C++11 compiler is required.
 Prepare gtest:
 
     apt-get install libgtest-dev
-    apt-get install cmake # install cmake
+    apt-get install cmake
     cd /usr/src/gtest
     cmake CMakeLists.txt
     make

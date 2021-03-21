@@ -33,11 +33,9 @@ set_property(TARGET objlib PROPERTY POSITION_INDEPENDENT_CODE 1)
 # shared and static libraries built from the same object files
 add_library(uap-cpp-static STATIC $<TARGET_OBJECTS:objlib>)
 set_target_properties(uap-cpp-static PROPERTIES OUTPUT_NAME uaparser_cpp)
-target_link_libraries(uap-cpp-static)
 
 add_library(uap-cpp-shared SHARED $<TARGET_OBJECTS:objlib>)
 set_target_properties(uap-cpp-shared PROPERTIES OUTPUT_NAME uaparser_cpp)
-target_link_libraries(uap-cpp-shared)
 
 
 

@@ -2,6 +2,7 @@
 
 #include "StringView.h"
 
+#include <cstdint>
 #include <set>
 #include <string>
 #include <unordered_map>

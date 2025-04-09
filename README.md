@@ -14,7 +14,7 @@ To build and run the tests:
 
     make test
 
-A recent (GCC >= 4.8 or Clang >= 3.9 both work) C++11 compiler is required.
+A recent (GCC >= 5.4 or Clang >= 3.9 both work) C++14 compiler is required.
 
 #### CMake build
 
@@ -73,7 +73,7 @@ The MSVC projects assume boost to be installed at: ``C:\boost_1_69_0`` and yaml 
 Dependencies
 ------------
 
-* re2, yaml-cpp (0.5 API)
+* re2, yaml-cpp (>=0.5)
 * gtest (for testing)
 * [uap-core](https://github.com/ua-parser/uap-core), same directory level as uap-cpp. You can clone this repo with --recurse-submodules to get it. Alternatively, run `git submodule update --init`.
 

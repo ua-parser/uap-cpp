@@ -1,0 +1,10 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+include(FindPkgConfig)
+
+pkg_check_modules(re2 IMPORTED_TARGET re2)
+find_dependency(yaml-cpp CONFIG)
+
+include("${CMAKE_CURRENT_LIST_DIR}/uap-cppTargets.cmake")
+check_required_components(uap-cpp)

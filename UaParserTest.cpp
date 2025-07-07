@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <yaml-cpp/yaml.h>
 
-#include "UaParser.h"
+#include "UaParser"
 #include "internal/AlternativeExpander.h"
 #include "internal/Pattern.h"
 #include "internal/ReplaceTemplate.h"

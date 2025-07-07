@@ -1,4 +1,4 @@
-#include "UaParser.h"
+#include "UaParser"
 
 #include <yaml-cpp/yaml.h>
 
@@ -307,9 +307,9 @@ UserAgent UserAgentParser::parse(const std::string& ua) const noexcept {
     const auto device = parse_device_impl(ua, ua_store);
     const auto os = parse_os_impl(ua, ua_store);
     const auto browser = parse_browser_impl(ua, ua_store);
-    return {device, os, browser};
+    return {device, os, browser, ua};
   } catch (...) {
-    return {Device(), Agent(), Agent()};
+    return {Device(), Agent(), Agent(), ""};
   }
 }
 

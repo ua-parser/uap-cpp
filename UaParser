@@ -33,6 +33,7 @@ struct UserAgent {
 
   Agent os;
   Agent browser;
+  std::string ua_string;
 
   std::string toFullString() const {
     return browser.toString() + "/" + os.toString();

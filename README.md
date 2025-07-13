@@ -4,16 +4,6 @@ ua_parser C++ Library
 Usage
 -----
 
-### Linux
-
-To build the (static) library:
-
-    make uaparser_cpp
-
-To build and run the tests:
-
-    make test
-
 A recent (GCC >= 5.4 or Clang >= 3.9 both work) C++14 compiler is required.
 
 #### CMake build

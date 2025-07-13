@@ -31,11 +31,11 @@ Prepare gtest:
 
 Run from build directory:
 
-    make tests
+    make test
 
 Run from uap-cpp directory:
 
-    ./build/UaParserTest
+    ./build/uap-cpp-tests
 
 ##### benchmark
 Run from build directory:
